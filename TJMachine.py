@@ -6,7 +6,7 @@ import csv
 
 # TJ Machine number
 MACH_NUM = 100
-# Set GPIO layout
+# Sets GPIO layout
 GPIO.setmode(GPIO.BCM)
 # Sets up RFID Reader
 reader = SimpleMFRC522()
@@ -19,7 +19,6 @@ GPIO.output(12, GPIO.LOW)
 # Creates functions to control RFID LED indicator
 def rf_led_on():
     GPIO.output(12, GPIO.HIGH)
-
 
 def rf_led_off():
     GPIO.output(12, GPIO.LOW)
@@ -39,11 +38,11 @@ GPIO.setup(relay3, GPIO.OUT)
 def relay_on(relay):
     GPIO.output(relay, GPIO.LOW)
 
-
 def relay_off(relay):
     GPIO.output(relay, GPIO.HIGH)
 
-
+    
+# Initializes relays to the off positions
 relay_off((relay1, relay2, relay3))
 
 """Used to create and run sequence of relays.
