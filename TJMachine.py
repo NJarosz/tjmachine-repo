@@ -107,9 +107,9 @@ def csv_writer():
     """used to create the dated csv file the
     data will be saved to.  Returns csv writer
     csv file, and date of creation"""
-    today = date.today().strftime("%Y%m%d")
+    today = date.today()
     path = "/home/pi/Documents/CSV/"
-    filename = today + "Machine100.csv"
+    filename = today.strftime("%Y%m%d") + "Machine100.csv"
 
     fa = open(path + filename, "a", newline="")
     writer = csv.writer(fa, delimiter=",")
@@ -129,9 +129,8 @@ csv_f, writer, today = csv_writer()
 
 
 # append data to csv
-def add_timestamp():
+def add_timestamp(writer, day):
     now = time.strftime("%H:%M:%S")
-    day = date.today()
     data = (mach_num, part_num, id_num, user.strip(), now, day)
     writer.writerow(data)
 
@@ -139,7 +138,7 @@ def add_timestamp():
 try:
     while True:
         # create a new csv every day
-        if date.today().strftime("%Y%m%d") != today:
+        if date.today() != today:
             csv_f.close()
             csv_f, writer, today = csv_writer()
 
@@ -155,7 +154,7 @@ try:
                 pass
             else:
                 run_sequence(seq)
-                add_timestamp()
+                add_timestamp(writer, today)
 
             rf_led_off()
             user = None
