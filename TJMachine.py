@@ -109,10 +109,8 @@ def csv_writer():
     today = date.today()
     path = "/home/pi/Documents/CSV/"
     filename = today.strftime("%Y%m%d") + "Machine100.csv"
-
     fa = open(path + filename, "a", newline="")
     writer = csv.writer(fa, delimiter=",")
-
     fr = open(path + filename, "r", newline='')
     line = fr.readline()  # check if empty
     if not line:  # if empty, add header
@@ -120,12 +118,11 @@ def csv_writer():
                   "User_ID", "Time", "Date")
         writer.writerow(header)
     fr.close()
-
     return fa, writer, today
 
 
+#Instantiates the csv writer
 csv_f, writer, today = csv_writer()
-
 
 # Used to append data to csv created by csv_writer()
 def add_timestamp(writer, day):
@@ -145,7 +142,8 @@ try:
         id_num, user = reader.read()
 
         if user is not None:
-            rf_led_on()     # Turns on RFID LED indicator
+            rf_led_on()         # Turns on RFID LED indicator
+            
             # Waits 7 seconds for button press to trigger relay
             button = GPIO.wait_for_edge(22, GPIO.RISING, timeout=7000)
             if button is None:
