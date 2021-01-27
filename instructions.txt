@@ -1,0 +1,12 @@
+partnumber, 10000
+
+ON,1
+ON,2
+TMR,500
+OFF,1
+ON,3
+TRM,1000
+OFF,2
+TMR,1000
+OFF,3
+setup,4
