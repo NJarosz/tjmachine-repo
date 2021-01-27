@@ -5,18 +5,18 @@ import time
 import csv
 
 # TJ Machine number
-mach_num = 100
-# set GPIO layout
+MACH_NUM = 100
+# Set GPIO layout
 GPIO.setmode(GPIO.BCM)
-# RFID Reader
+# Sets up RFID Reader
 reader = SimpleMFRC522()
-# Button
+# Sets up button that triggers machine
 GPIO.setup(22, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-# RFID LED indicator
+# Sets up RFID LED indicator
 GPIO.setup(12, GPIO.OUT)
 GPIO.output(12, GPIO.LOW)
 
-
+# Creates functions to control RFID LED indicator
 def rf_led_on():
     GPIO.output(12, GPIO.HIGH)
 
@@ -25,7 +25,7 @@ def rf_led_off():
     GPIO.output(12, GPIO.LOW)
 
 
-# Relays
+# Sets up relays
 relay1 = 4
 GPIO.setup(relay1, GPIO.OUT)
 
@@ -35,7 +35,7 @@ GPIO.setup(relay2, GPIO.OUT)
 relay3 = 27
 GPIO.setup(relay3, GPIO.OUT)
 
-
+# Sets up functions to control relays
 def relay_on(relay):
     GPIO.output(relay, GPIO.LOW)
 
@@ -46,17 +46,17 @@ def relay_off(relay):
 
 relay_off((relay1, relay2, relay3))
 
-"""Used to create and run sequence of relays
-Needs to be manually set for relays in physical use
-Set key as int to match physical relay number
-Set value to match variable name for that relay"""
+"""Used to create and run sequence of relays.
+Needs to be manually set for relays in physical use.
+Set key as int to match physical relay number.
+Set value to match variable name for that relay."""
 rl_dict = {1: relay1, 2: relay2, 3: relay3}
 
 
 def create_sequence(filename):
-    """creates the order of relay operations from
-    the text file.  Returns the sequence and part
-    number being ran"""
+    """Creates the order of relay operations by reading
+    the text file.  Returns the sequence as a dict 
+    and the part number being ran."""
     sequence = {}
     ind = 1
     text = open(filename, 'r')
@@ -80,14 +80,14 @@ def create_sequence(filename):
     text.close()
     return part, sequence
 
-
+# Instantiates the sequence
 txt_file = "/home/pi/Desktop/instructions"
 part_num, seq = create_sequence(txt_file)
 
 
 def run_sequence(seq_dict):
-    """uses the dictionary returned by
-    create_sequence to trigger relays/timers"""
+    """Uses the dictionary returned by
+    create_sequence() to trigger relays/timers."""
     try:
         for key, value in seq_dict.items():
             if "on" in key.lower():
@@ -104,9 +104,9 @@ def run_sequence(seq_dict):
 
 
 def csv_writer():
-    """used to create the dated csv file the
-    data will be saved to.  Returns csv writer
-    csv file, and date of creation"""
+    """Used to create the csv file the
+    data will be saved to.  Returns csv file,
+    csv writer, and date of creation"""
     today = date.today()
     path = "/home/pi/Documents/CSV/"
     filename = today.strftime("%Y%m%d") + "Machine100.csv"
@@ -128,26 +128,26 @@ def csv_writer():
 csv_f, writer, today = csv_writer()
 
 
-# append data to csv
+# Used to append data to csv created by csv_writer()
 def add_timestamp(writer, day):
     now = time.strftime("%H:%M:%S")
-    data = (mach_num, part_num, id_num, user.strip(), now, day)
+    data = (MACH_NUM, part_num, id_num, user.strip(), now, day)
     writer.writerow(data)
 
 
 try:
     while True:
-        # create a new csv every day
+        # Creates a new csv every day
         if date.today() != today:
             csv_f.close()
             csv_f, writer, today = csv_writer()
 
-        # read RFID card
+        # Read info on RFID card, if present
         id_num, user = reader.read()
 
         if user is not None:
-            rf_led_on()
-            # wait up for 7 seconds for button press to trigger relay
+            rf_led_on()     # Turns on RFID LED indicator
+            # Waits 7 seconds for button press to trigger relay
             button = GPIO.wait_for_edge(22, GPIO.RISING, timeout=7000)
             if button is None:
                 rf_led_off()
@@ -156,7 +156,7 @@ try:
                 run_sequence(seq)
                 add_timestamp(writer, today)
 
-            rf_led_off()
+            rf_led_off()        # Turns of RFID LED indicator
             user = None
 
 except KeyboardInterrupt:
