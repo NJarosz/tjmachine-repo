@@ -19,7 +19,7 @@ button = 22
 relay1 = 4
 relay2 = 17
 relay3 = 27
-realys = (relay1, relay2, relay3)
+relays = (relay1, relay2, relay3)
 """Creates functions to control GPIO.
 gpio_low() is ON for Relays, off for LED
 gpio_high() is OFF for Relays, on for LED"""
