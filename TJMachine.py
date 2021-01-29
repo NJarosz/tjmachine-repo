@@ -19,7 +19,7 @@ button = 22
 relay1 = 4
 relay2 = 17
 relay3 = 27
-
+realys = (relay1, relay2, relay3)
 """Creates functions to control GPIO.
 gpio_low() is ON for Relays, off for LED
 gpio_high() is OFF for Relays, on for LED"""
@@ -82,7 +82,7 @@ txt_file = "/home/pi/Desktop/instructions"
 part_num, seq = create_sequence(txt_file)
 
 
-def run_sequence(seq_dict):
+def run_sequence(seq_dict, relays):
     """Uses the dictionary returned by
     create_sequence() to trigger relays/timers."""
     try:
@@ -93,6 +93,9 @@ def run_sequence(seq_dict):
                 time.sleep(value)
             elif "off" in key.lower():
                 gpio_high(eval(value))
+    except:
+        for relay in relays:
+            gpio_high(relay)
 
 
 def csv_writer(day):
