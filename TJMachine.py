@@ -6,44 +6,41 @@ import csv
 
 # TJ Machine number
 MACH_NUM = 100
+
 # Sets GPIO layout
 GPIO.setmode(GPIO.BCM)
 # Sets up RFID Reader
 reader = SimpleMFRC522()
 # Sets up button that triggers machine
-someVar1=12
-someVar2=22
+led=12
+button=22
 relay1 = 4
 relay2 = 17
 relay3 = 27
 
+"""Creates functions to control GPIO.
+    gpio_low() is on for relays, off for LED
+    gpio_high() is off for relays, on for LED"""
+def gpio_high(gpio):
+    GPIO.output(gpio, GPIO.HIGH)
+def gpio_low(gpio):
+    GPIO.output(gpio, GPIO.LOW)
 
-GPIO.setup(someVar2, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+# Sets up Button
+GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
 # Sets up RFID LED indicator
-GPIO.setup(someVar1, GPIO.OUT)
-GPIO.output(someVar1, GPIO.LOW)
-
-# Creates functions to control RFID LED indicator
-def rf_led_on():
-    GPIO.output(someVar1, GPIO.HIGH)
-def rf_led_off():
-    GPIO.output(someVar1, GPIO.LOW)
+GPIO.setup(led, GPIO.OUT)
 
 # Sets up relays
 GPIO.setup(relay1, GPIO.OUT)
 GPIO.setup(relay2, GPIO.OUT)
 GPIO.setup(relay3, GPIO.OUT)
 
-# Sets up functions to control relays
-def relay_on(relay):
-    GPIO.output(relay, GPIO.LOW)
-
-def relay_off(relay):
-    GPIO.output(relay, GPIO.HIGH)
-
-    
 # Initializes relays to the off positions
-relay_off((relay1, relay2, relay3))
+gpio_high((relay1, relay2, relay3))
+# Initializes rfid LED to off
+gpio_low(led)
 
 """Used to create and run sequence of relays.
 Needs to be manually set for relays in physical use.
