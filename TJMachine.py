@@ -14,8 +14,8 @@ GPIO.setmode(GPIO.BCM)
 # Sets up RFID Reader
 reader = SimpleMFRC522()
 # Sets up button that triggers machine
-led=12
-button=22
+led = 12
+button = 22
 relay1 = 4
 relay2 = 17
 relay3 = 27
@@ -100,13 +100,12 @@ def run_sequence(seq_dict, relay_dict):
             gpio_high(i)
 
 
-def csv_writer():
+def csv_writer(day):
     """Used to create the csv file the
     data will be saved to.  Returns csv file,
     csv writer, and date of creation"""
-    today = date.today()
     path = "/home/pi/Documents/CSV/"
-    filename = today.strftime("%Y%m%d") + "Machine100.csv"
+    filename = day.strftime("%Y%m%d") + f"Machine{MACH_NUM}.csv"
     fa = open(path + filename, "a", newline="")
     writer = csv.writer(fa, delimiter=",")
     fr = open(path + filename, "r", newline='')
@@ -116,11 +115,11 @@ def csv_writer():
                   "User_ID", "Time", "Date")
         writer.writerow(header)
     fr.close()
-    return fa, writer, today
+    return fa, writer
 
 
 #Instantiates the csv writer
-csv_f, writer, today = csv_writer()
+csv_f, writer = csv_writer(today)
 
 # Used to append data to csv created by csv_writer()
 def add_timestamp(writer, day):
@@ -134,7 +133,8 @@ try:
         # Creates a new csv every day
         if date.today() != today:
             csv_f.close()
-            csv_f, writer, today = csv_writer()
+            today = date.today()
+            csv_f, writer = csv_writer(today)
 
         # Read info on RFID card, if present
         id_num, user = reader.read()
