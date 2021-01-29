@@ -20,6 +20,7 @@ relay1 = 4
 relay2 = 17
 relay3 = 27
 relays = (relay1, relay2, relay3)
+
 """Creates functions to control GPIO.
 gpio_low() is ON for Relays, off for LED
 gpio_high() is OFF for Relays, on for LED"""
@@ -44,13 +45,6 @@ gpio_high((relay1, relay2, relay3))
 # Initializes rfid LED to off
 gpio_low(led)
 
-"""Used to create and run sequence of relays.
-Needs to be manually set for relays in physical use.
-Set key as int to match physical relay number.
-Set value to match variable name for that relay."""
-rl_dict = {1: relay1, 2: relay2, 3: relay3}
-
-
 def create_sequence(filename):
     """Creates the order of relay operations by reading
     the text file.  Returns the sequence as a dict 
@@ -59,7 +53,7 @@ def create_sequence(filename):
     ind = 1
     with open(filename, 'r') as text:
         for line in text:
-            if len(line.strip()) == 0:
+            if len(line.strip()) == 0:      #skips any blank lines
                 pass
             else:
                 key, value = line.strip().split(",")
@@ -99,9 +93,10 @@ def run_sequence(seq_dict, relays):
 
 
 def csv_writer(day):
-    """Used to create the csv file the
-    data will be saved to.  Returns csv file,
-    csv writer, and date of creation"""
+    """Used to create or open the csv file the
+    data will be saved to.  Returns csv file
+    and csv writer.  If creating a new file, it 
+    adds a header"""
     path = "/home/pi/Documents/CSV/"
     filename = day.strftime("%Y%m%d") + f"Machine{MACH_NUM}.csv"
     fa = open(path + filename, "a", newline="")
@@ -148,7 +143,7 @@ try:
                 run_sequence(seq, relays)
                 add_timestamp(writer, today)
 
-            gpio_high(led)        # Turns of RFID LED indicator
+            gpio_low(led)        # Turns off RFID LED indicator
             user = None
 
 except KeyboardInterrupt:
