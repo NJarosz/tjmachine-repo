@@ -11,27 +11,27 @@ GPIO.setmode(GPIO.BCM)
 # Sets up RFID Reader
 reader = SimpleMFRC522()
 # Sets up button that triggers machine
-GPIO.setup(22, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+someVar1=12
+someVar2=22
+relay1 = 4
+relay2 = 17
+relay3 = 27
+
+
+GPIO.setup(someVar2, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 # Sets up RFID LED indicator
-GPIO.setup(12, GPIO.OUT)
-GPIO.output(12, GPIO.LOW)
+GPIO.setup(someVar1, GPIO.OUT)
+GPIO.output(someVar1, GPIO.LOW)
 
 # Creates functions to control RFID LED indicator
 def rf_led_on():
-    GPIO.output(12, GPIO.HIGH)
-
+    GPIO.output(someVar1, GPIO.HIGH)
 def rf_led_off():
-    GPIO.output(12, GPIO.LOW)
-
+    GPIO.output(someVar1, GPIO.LOW)
 
 # Sets up relays
-relay1 = 4
 GPIO.setup(relay1, GPIO.OUT)
-
-relay2 = 17
 GPIO.setup(relay2, GPIO.OUT)
-
-relay3 = 27
 GPIO.setup(relay3, GPIO.OUT)
 
 # Sets up functions to control relays
@@ -165,5 +165,4 @@ except Exception as e:
     GPIO.cleanup()
     csv_f.close()
     print(e)
-
 
