@@ -57,23 +57,22 @@ def create_sequence(filename):
     ind = 1
     with open(filename, 'r') as text:
         for line in text:
-        try:
-            key, value = line.strip().split(",")
-        except:
-            pass
-        if "part" in key.lower():
-            part = value
-        elif "tmr" in key.lower() or "trm" in key.lower():
-            value = float(value) / 1000
-            sequence[str(ind) + "- " + key] = float(value)
-            ind += 1
-        elif "on" in key.lower():
-            sequence[str(ind) + "- " + key] = int(value)
-            ind += 1
-        elif "off" in key.lower():
-            sequence[str(ind) + "- " + key] = int(value)
-            ind += 1
-    text.close()
+            try:
+                key, value = line.strip().split(",")
+            except:
+                pass
+            if "part" in key.lower():
+                part = value
+            elif "tmr" in key.lower() or "trm" in key.lower():
+                value = float(value) / 1000
+                sequence[str(ind) + "- " + key] = float(value)
+                ind += 1
+            elif "on" in key.lower():
+                sequence[str(ind) + "- " + key] = int(value)
+                ind += 1
+            elif "off" in key.lower():
+                sequence[str(ind) + "- " + key] = int(value)
+                ind += 1
     return part, sequence
 
 # Instantiates the sequence
