@@ -145,7 +145,7 @@ try:
                 gpio_low(led)
                 pass
             else:
-                run_sequence(seq)
+                run_sequence(seq, relays)
                 add_timestamp(writer, today)
 
             gpio_high(led)        # Turns of RFID LED indicator
