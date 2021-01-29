@@ -55,8 +55,8 @@ def create_sequence(filename):
     and the part number being ran."""
     sequence = {}
     ind = 1
-    text = open(filename, 'r')
-    for line in text:
+    with open(filename, 'r') as text:
+        for line in text:
         try:
             key, value = line.strip().split(",")
         except:
@@ -162,4 +162,3 @@ except Exception as e:
     GPIO.cleanup()
     csv_f.close()
     print(e)
-
