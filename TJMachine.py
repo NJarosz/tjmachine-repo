@@ -7,6 +7,8 @@ import csv
 # TJ Machine number
 MACH_NUM = 100
 
+today = date.today()
+
 # Sets GPIO layout
 GPIO.setmode(GPIO.BCM)
 # Sets up RFID Reader
