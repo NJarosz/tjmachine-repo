@@ -103,13 +103,12 @@ def csv_writer(day):
     filename = day.strftime("%Y%m%d") + f"Machine{MACH_NUM}.csv"
     fa = open(path + filename, "a", newline="")
     writer = csv.writer(fa, delimiter=",")
-    fr = open(path + filename, "r", newline='')
-    line = fr.readline()  # check if empty
-    if not line:  # if empty, add header
-        header = ("Machine", "Part", "Card_ID",
-                  "User_ID", "Time", "Date")
-        writer.writerow(header)
-    fr.close()
+    with open(path + filename, "r", newline='') as fr:
+        line = fr.readline()  # check if empty
+        if not line:  # if empty, add header
+            header = ("Machine", "Part", "Card_ID",
+                      "User_ID", "Time", "Date")
+            writer.writerow(header)
     return fa, writer
 
 
