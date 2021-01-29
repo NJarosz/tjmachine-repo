@@ -41,7 +41,7 @@ GPIO.setup(relay2, GPIO.OUT)
 GPIO.setup(relay3, GPIO.OUT)
 
 # Initializes relays to the off positions
-gpio_high((relay1, relay2, relay3))
+gpio_high(relays)
 # Initializes rfid LED to off
 gpio_low(led)
 
@@ -87,9 +87,9 @@ def run_sequence(seq_dict, relays):
                 time.sleep(value)
             elif "off" in key.lower():
                 gpio_high(eval(value))
+        gpio_high(relays)
     except:
-        for relay in relays:
-            gpio_high(relay)
+        gpio_high(relays)
 
 
 def csv_writer(day):
