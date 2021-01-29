@@ -82,22 +82,22 @@ txt_file = "/home/pi/Desktop/instructions"
 part_num, seq = create_sequence(txt_file)
 
 
-def run_sequence(seq_dict):
+def run_sequence(seq_dict, relay_dict):
     """Uses the dictionary returned by
     create_sequence() to trigger relays/timers."""
     try:
         for key, value in seq_dict.items():
             if "on" in key.lower():
-                relay_on(rl_dict[value])
+                gpio_low(relay_dict[value])
             elif "tmr" in key.lower() or "trm" in key.lower():
                 time.sleep(value)
             elif "off" in key.lower():
-                relay_off(rl_dict[value])
-        for i in rl_dict.values():
-            relay_off(i)
+                gpio_high(relay_dict[value])
+        for i in relay_dict.values():
+            gpio_high(i)
     except:
-        for i in rl_dict.values():
-            relay_off(i)
+        for i in relay_dict.values():
+            gpio_high(i)
 
 
 def csv_writer():
