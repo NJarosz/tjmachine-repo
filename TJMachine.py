@@ -13,7 +13,7 @@ today = date.today()
 GPIO.setmode(GPIO.BCM)
 # Sets up RFID Reader
 reader = SimpleMFRC522()
-# Sets up button that triggers machine
+# Sets up active GPIO's as variables
 led = 12
 button = 22
 relay1 = 4
@@ -21,8 +21,8 @@ relay2 = 17
 relay3 = 27
 
 """Creates functions to control GPIO.
-    gpio_low() is on for relays, off for LED
-    gpio_high() is off for relays, on for LED"""
+gpio_low() is ON for Relays, off for LED
+gpio_high() is OFF for Relays, on for LED"""
 def gpio_high(gpio):
     GPIO.output(gpio, GPIO.HIGH)
 def gpio_low(gpio):
@@ -34,7 +34,7 @@ GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 # Sets up RFID LED indicator
 GPIO.setup(led, GPIO.OUT)
 
-# Sets up relays
+# Sets up Relays
 GPIO.setup(relay1, GPIO.OUT)
 GPIO.setup(relay2, GPIO.OUT)
 GPIO.setup(relay3, GPIO.OUT)
@@ -59,22 +59,22 @@ def create_sequence(filename):
     ind = 1
     with open(filename, 'r') as text:
         for line in text:
-            try:
-                key, value = line.strip().split(",")
-            except:
+            if len(line.strip()) == 0:
                 pass
-            if "part" in key.lower():
-                part = value
-            elif "tmr" in key.lower() or "trm" in key.lower():
-                value = float(value) / 1000
-                sequence[str(ind) + "- " + key] = float(value)
-                ind += 1
-            elif "on" in key.lower():
-                sequence[str(ind) + "- " + key] = int(value)
-                ind += 1
-            elif "off" in key.lower():
-                sequence[str(ind) + "- " + key] = int(value)
-                ind += 1
+            else:
+                key, value = line.strip().split(",")
+                if "part" in key.lower():
+                    part = value
+                elif "tmr" in key.lower() or "trm" in key.lower():
+                    value = float(value) / 1000
+                    sequence[str(ind) + "- " + key] = float(value)
+                    ind += 1
+                elif "on" in key.lower():
+                    sequence[str(ind) + "- " + key] = "relay" + value
+                    ind += 1
+                elif "off" in key.lower():
+                    sequence[str(ind) + "- " + key] = "relay" + value
+                    ind += 1
     return part, sequence
 
 # Instantiates the sequence
@@ -82,22 +82,17 @@ txt_file = "/home/pi/Desktop/instructions"
 part_num, seq = create_sequence(txt_file)
 
 
-def run_sequence(seq_dict, relay_dict):
+def run_sequence(seq_dict):
     """Uses the dictionary returned by
     create_sequence() to trigger relays/timers."""
     try:
         for key, value in seq_dict.items():
             if "on" in key.lower():
-                gpio_low(relay_dict[value])
+                gpio_low(eval(value))
             elif "tmr" in key.lower() or "trm" in key.lower():
                 time.sleep(value)
             elif "off" in key.lower():
-                gpio_high(relay_dict[value])
-        for i in relay_dict.values():
-            gpio_high(i)
-    except:
-        for i in relay_dict.values():
-            gpio_high(i)
+                gpio_high(eval(value))
 
 
 def csv_writer(day):
@@ -140,18 +135,18 @@ try:
         id_num, user = reader.read()
 
         if user is not None:
-            rf_led_on()         # Turns on RFID LED indicator
+            gpio_high(led)         # Turns on RFID LED indicator
             
             # Waits 7 seconds for button press to trigger relay
             button = GPIO.wait_for_edge(22, GPIO.RISING, timeout=7000)
             if button is None:
-                rf_led_off()
+                gpio_low(led)
                 pass
             else:
                 run_sequence(seq)
                 add_timestamp(writer, today)
 
-            rf_led_off()        # Turns of RFID LED indicator
+            gpio_high(led)        # Turns of RFID LED indicator
             user = None
 
 except KeyboardInterrupt:
