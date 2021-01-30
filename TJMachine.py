@@ -7,8 +7,6 @@ import csv
 # TJ Machine number
 MACH_NUM = 100
 
-today = date.today()
-
 # Sets GPIO layout
 GPIO.setmode(GPIO.BCM)
 # Sets up RFID Reader
@@ -21,14 +19,6 @@ relay2 = 17
 relay3 = 27
 relays = (relay1, relay2, relay3)
 
-"""Creates functions to control GPIO.
-gpio_low() is ON for Relays, off for LED
-gpio_high() is OFF for Relays, on for LED"""
-def gpio_high(gpio):
-    GPIO.output(gpio, GPIO.HIGH)
-def gpio_low(gpio):
-    GPIO.output(gpio, GPIO.LOW)
-
 # Sets up Button
 GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
@@ -40,11 +30,17 @@ GPIO.setup(relay1, GPIO.OUT)
 GPIO.setup(relay2, GPIO.OUT)
 GPIO.setup(relay3, GPIO.OUT)
 
-# Initializes relays to the off positions
-gpio_high(relays)
-# Initializes rfid LED to off
-gpio_low(led)
 
+#Creates functions to control GPIO pins.
+# gpio_high() is OFF for Relays, on for LED
+def gpio_high(gpio):
+    GPIO.output(gpio, GPIO.HIGH)
+# gpio_low() is ON for Relays, off for LED
+def gpio_low(gpio):
+    GPIO.output(gpio, GPIO.LOW)
+    
+    
+ 
 def create_sequence(filename):
     """Creates the order of relay operations by reading
     the text file.  Returns the sequence as a dict 
@@ -71,9 +67,20 @@ def create_sequence(filename):
                     ind += 1
     return part, sequence
 
-# Instantiates the sequence
-txt_file = "/home/pi/Desktop/instructions"
-part_num, seq = create_sequence(txt_file)
+
+def evaluate_seq(seq_dict, relays):
+    """tries to catch any typos in relay 
+    numbers in the sequence created by
+    create_sequence()"""
+   b = True
+   for key, value in seq_dict.items():
+        try:
+            if "on" in key.lower() or "off" in key.lower():
+                if eval(value) in relays:
+                    pass
+        except:
+            b = False
+   return b
 
 
 def run_sequence(seq_dict, relays):
@@ -90,68 +97,67 @@ def run_sequence(seq_dict, relays):
         gpio_high(relays)
     except:
         gpio_high(relays)
+        
 
-
-def csv_writer(day):
-    """Used to create or open the csv file the
-    data will be saved to.  Returns csv file
-    and csv writer.  If creating a new file, it 
-    adds a header"""
+def add_timestamp():
+    """opens or creates a csv file with todays date in
+    filename. Adds timestamp to that csv including machine
+    number, part number, id number, user, time, date"""
+    today = date.today()
+    now = time.strftime("%H:%M:%S")
+    data = (MACH_NUM, part_num, id_num, user.strip(), now, today)
     path = "/home/pi/Documents/CSV/"
-    filename = day.strftime("%Y%m%d") + f"Machine{MACH_NUM}.csv"
-    fa = open(path + filename, "a", newline="")
-    writer = csv.writer(fa, delimiter=",")
-    with open(path + filename, "r", newline='') as fr:
+    filename = today.strftime("%Y%m%d") + f"Machine{MACH_NUM}.csv"
+    with open(path + filename, "a", newline="") as fa, \
+            open(path + filename, "r", newline='') as fr:
+        writer = csv.writer(fa, delimiter=",")
         line = fr.readline()  # check if empty
         if not line:  # if empty, add header
             header = ("Machine", "Part", "Card_ID",
                       "User_ID", "Time", "Date")
             writer.writerow(header)
-    return fa, writer
+        writer.writerow(data)
 
 
-#Instantiates the csv writer
-csv_f, writer = csv_writer(today)
+        
+# Initializes relays to the off positions
+gpio_high(relays)
+# Initializes rfid LED to off
+gpio_low(led)        
+# Instantiates the sequence
+txt_file = "/home/pi/Desktop/instructions"
+part_num, seq = create_sequence(txt_file)
+# Evaluates the sequence
+test = evaluate_seq(seq, relays)
 
-# Used to append data to csv created by csv_writer()
-def add_timestamp(writer, day):
-    now = time.strftime("%H:%M:%S")
-    data = (MACH_NUM, part_num, id_num, user.strip(), now, day)
-    writer.writerow(data)
+if test:
+    try:
+        while True:
 
+            # Read info on RFID card, if present
+            id_num, user = reader.read()
 
-try:
-    while True:
-        # Creates a new csv every day
-        if date.today() != today:
-            csv_f.close()
-            today = date.today()
-            csv_f, writer = csv_writer(today)
+            if user is not None:
+                gpio_high(led)         # Turns on RFID LED indicator
 
-        # Read info on RFID card, if present
-        id_num, user = reader.read()
+                # Waits 7 seconds for button press to trigger relay
+                button = GPIO.wait_for_edge(22, GPIO.RISING, timeout=7000)
+                if button is None:
+                    gpio_low(led)
+                    pass
+                else:
+                    run_sequence(seq, relays)
+                    add_timestamp(writer, today)
 
-        if user is not None:
-            gpio_high(led)         # Turns on RFID LED indicator
-            
-            # Waits 7 seconds for button press to trigger relay
-            button = GPIO.wait_for_edge(22, GPIO.RISING, timeout=7000)
-            if button is None:
-                gpio_low(led)
-                pass
-            else:
-                run_sequence(seq, relays)
-                add_timestamp(writer, today)
+                gpio_low(led)        # Turns off RFID LED indicator
+                user = None
 
-            gpio_low(led)        # Turns off RFID LED indicator
-            user = None
+    except KeyboardInterrupt:
+        GPIO.cleanup()
+        csv_f.close()
+        print("exit")
 
-except KeyboardInterrupt:
-    GPIO.cleanup()
-    csv_f.close()
-    print("exit")
-
-except Exception as e:
-    GPIO.cleanup()
-    csv_f.close()
-    print(e)
+    except Exception as e:
+        GPIO.cleanup()
+        csv_f.close()
+        print(e)
