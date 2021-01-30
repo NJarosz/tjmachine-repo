@@ -72,15 +72,15 @@ def evaluate_seq(seq_dict, relays):
     """tries to catch any typos in relay 
     numbers in the sequence created by
     create_sequence()"""
-   b = True
-   for key, value in seq_dict.items():
+    b = True
+    for key, value in seq_dict.items():
         try:
             if "on" in key.lower() or "off" in key.lower():
                 if eval(value) in relays:
                     pass
         except:
             b = False
-   return b
+    return b
 
 
 def run_sequence(seq_dict, relays):
@@ -133,7 +133,6 @@ test = evaluate_seq(seq, relays)
 if test:
     try:
         while True:
-
             # Read info on RFID card, if present
             id_num, user = reader.read()
 
@@ -147,17 +146,15 @@ if test:
                     pass
                 else:
                     run_sequence(seq, relays)
-                    add_timestamp(writer, today)
+                    add_timestamp()
 
                 gpio_low(led)        # Turns off RFID LED indicator
                 user = None
 
     except KeyboardInterrupt:
         GPIO.cleanup()
-        csv_f.close()
         print("exit")
 
     except Exception as e:
         GPIO.cleanup()
-        csv_f.close()
         print(e)
