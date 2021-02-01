@@ -86,6 +86,7 @@ def evaluate_seq(seq_dict, relays):
         except:
             b = False
             gpio_high(ledred)
+            time.sleep(10)
             GPIO.cleanup()
     return b
 
