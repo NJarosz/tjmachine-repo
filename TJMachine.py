@@ -46,50 +46,55 @@ def gpio_low(gpio):
     
  
 def create_sequence(filename):
-    """Creates the order of relay operations by reading
-    the text file.  Returns the sequence as a dict 
-    and the part number being ran."""
+    """Creates the order of relay operations by 
+    reading the text file.  Returns the sequence 
+    as a dict and the part number being ran."""
     sequence = {}
     ind = 1
     with open(filename, 'r') as text:
         for line in text:
-            if len(line.strip()) == 0:      #skips any blank lines
+            if len(line.strip()) == 0:
+                pass
+            elif "#" in line:
                 pass
             else:
-                key, value = line.strip().split(",")
-                if "part" in key.lower():
-                    part = value
-                elif "tmr" in key.lower() or "trm" in key.lower():
-                    value = float(value) / 1000
-                    sequence[str(ind) + "- " + key] = float(value)
-                    ind += 1
-                elif "on" in key.lower():
-                    sequence[str(ind) + "- " + key] = "relay" + value
-                    ind += 1
-                elif "off" in key.lower():
-                    sequence[str(ind) + "- " + key] = "relay" + value
-                    ind += 1
-    return part, sequence
+                try:
+                    key, value = line.strip().split(",")
+                    if "part" in key.lower():
+                        part_num = value
+                    elif "tmr" in key.lower():
+                        value = float(value) / 1000
+                        sequence[str(ind) + "- " + key] = value
+                        ind +=1
+                    elif "on" in key.lower():
+                        sequence[str(ind) + "- " + key] = "relay" +value
+                        ind += 1
+                    elif "off" in key.lower():
+                        sequence[str(ind) + "- " + key] = "relay" +value
+                        ind +=1
+                    elif key.lower() not in ("on", "off", "tmr"):
+                        sequence = {}
+                        part_num = None
+                        return part_num, sequence
+                except:
+                    gpio_high(ledred)
+    return part_num, sequence
 
 
 def evaluate_seq(seq_dict, relays):
-    """tries to catch any typos in relay 
-    numbers in the sequence created by
-    create_sequence(). If error is present,
-    Red LED turns on"""
-    b = True
-    for key, value in seq_dict.items():
-        try:
+    """Ensures realys listed in sequence created by create_sequence() 
+    are correctly listed.  If error is present, Red LED turns on."""
+    b = False
+    if seq:
+        b = True
+        for key, value in seq.items():
             if "on" in key.lower() or "off" in key.lower():
                 if eval(value) in relays:
                     pass
-        except:
-            b = False
-            gpio_high(ledred)
-            time.sleep(10)
-            GPIO.cleanup()
+            else:
+                print(key + "False")
+                b = False
     return b
-
 
 def run_sequence(seq_dict, relays):
     """Uses the dictionary returned by
