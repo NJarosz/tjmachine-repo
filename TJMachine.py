@@ -13,6 +13,7 @@ GPIO.setmode(GPIO.BCM)
 reader = SimpleMFRC522()
 # Sets up active GPIO's as variables
 led = 12
+ledred = 6
 button = 22
 relay1 = 4
 relay2 = 17
@@ -24,6 +25,9 @@ GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 # Sets up RFID LED indicator
 GPIO.setup(led, GPIO.OUT)
+
+#Sets up Error LED
+GPIO.setup(ledred, GPIO.OUT)
 
 # Sets up Relays
 GPIO.setup(relay1, GPIO.OUT)
@@ -71,7 +75,8 @@ def create_sequence(filename):
 def evaluate_seq(seq_dict, relays):
     """tries to catch any typos in relay 
     numbers in the sequence created by
-    create_sequence()"""
+    create_sequence(). If error is present,
+    Red LED turns on"""
     b = True
     for key, value in seq_dict.items():
         try:
@@ -80,6 +85,7 @@ def evaluate_seq(seq_dict, relays):
                     pass
         except:
             b = False
+            gpio_high(ledred)
     return b
 
 
@@ -123,7 +129,9 @@ def add_timestamp():
 # Initializes relays to the off positions
 gpio_high(relays)
 # Initializes rfid LED to off
-gpio_low(led)        
+gpio_low(led)
+# Initializes Error LED
+gpio_low(ledred)
 # Instantiates the sequence
 txt_file = "/home/pi/Desktop/instructions"
 part_num, seq = create_sequence(txt_file)
