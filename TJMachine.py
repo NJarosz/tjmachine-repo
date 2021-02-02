@@ -53,49 +53,46 @@ def create_sequence(filename):
     ind = 1
     with open(filename, 'r') as text:
         for line in text:
-            if len(line.strip()) == 0:
+            if len(line.strip()) == 0:      #skips any blank lines
                 pass
             elif "#" in line:
                 pass
             else:
-                try:
-                    key, value = line.strip().split(",")
-                    if "part" in key.lower():
-                        part_num = value
-                    elif "tmr" in key.lower():
-                        value = float(value) / 1000
-                        sequence[str(ind) + "- " + key] = value
-                        ind +=1
-                    elif "on" in key.lower():
-                        sequence[str(ind) + "- " + key] = "relay" +value
-                        ind += 1
-                    elif "off" in key.lower():
-                        sequence[str(ind) + "- " + key] = "relay" +value
-                        ind +=1
-                    elif key.lower() not in ("on", "off", "tmr"):
-                        sequence = {}
-                        part_num = None
-                        return part_num, sequence
-                except:
-                    gpio_high(ledred)
-                    time.sleep(10)
-                    GPIO.cleanup()
-    return part_num, sequence
+                key, value = line.strip().split(",")
+                key = key.lower()
+                if "part" in key:
+                    part = value
+                elif key == "tmr":
+                    value = float(value) / 1000
+                    sequence[str(ind) + "- " + key] = float(value)
+                    ind += 1
+                elif key in ("on", "off"):
+                    sequence[str(ind) + "- " + key] = "relay" + value
+                    ind += 1
+                elif key not in ("on", "off", "tmr"):
+                    sequence = {}
+                    part_num = None
+                    return part_num, sequence
+    return part, sequence
 
 
 def evaluate_seq(seq_dict, relays):
-    """Ensures realys listed in sequence created by create_sequence() 
-    are correctly listed.  If error is present, Red LED turns on."""
+    """Catches any typos in relay numbers in the sequence 
+    created by create_sequence(). If there's an invalid
+    relay number in sequence, Error LED turns on."""
     b = False
-    if seq:
+    if seq_dict:
         b = True
-        for key, value in seq.items():
-            if "on" in key.lower() or "off" in key.lower():
-                if eval(value) in relays:
-                    pass
-            else:
-                print(key + "False")
+        for key, value in seq_dict.items():
+            try:
+                if "on" in key or "off" in key:
+                    if eval(value) in relays:
+                        pass
+            except:
                 b = False
+                gpio_high(err_led)
+                time.sleep(10)
+                GPIO.cleanup()
     return b
 
 def run_sequence(seq_dict, relays):
@@ -103,11 +100,11 @@ def run_sequence(seq_dict, relays):
     create_sequence() to trigger relays/timers."""
     try:
         for key, value in seq_dict.items():
-            if "on" in key.lower():
+            if "on" in key:
                 gpio_low(eval(value))
-            elif "tmr" in key.lower() or "trm" in key.lower():
+            elif "tmr" in key:
                 time.sleep(value)
-            elif "off" in key.lower():
+            elif "off" in key:
                 gpio_high(eval(value))
         gpio_high(relays)
     except:
