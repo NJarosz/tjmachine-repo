@@ -59,7 +59,7 @@ def create_sequence(filename):
                 pass
             else:
                 try:
-                    key, value = line.strip().split(",")
+                    key, value = line.replace(' ', '').strip().split(",")
                     key = key.lower()
                     if "part" in key:
                         part = value
