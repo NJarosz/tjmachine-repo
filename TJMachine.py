@@ -78,6 +78,8 @@ def create_sequence(filename):
                         return part_num, sequence
                 except:
                     gpio_high(ledred)
+                    time.sleep(10)
+                    GPIO.cleanup()
     return part_num, sequence
 
 
