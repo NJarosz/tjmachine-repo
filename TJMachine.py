@@ -65,7 +65,7 @@ def create_sequence(filename):
                         part = value
                     elif key == "tmr":
                         value = float(value) / 1000
-                        sequence[str(ind) + "- " + key] = float(value)
+                        sequence[str(ind) + "- " + key] = value
                         ind += 1
                     elif key in ("on", "off"):
                         sequence[str(ind) + "- " + key] = "relay" + value
