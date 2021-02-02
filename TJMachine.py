@@ -12,8 +12,8 @@ GPIO.setmode(GPIO.BCM)
 # Sets up RFID Reader
 reader = SimpleMFRC522()
 # Sets up active GPIO's as variables
-led = 12
-ledred = 6
+rfid_led = 12
+err_led = 6
 button = 22
 relay1 = 4
 relay2 = 17
@@ -24,10 +24,10 @@ relays = (relay1, relay2, relay3)
 GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 # Sets up RFID LED indicator
-GPIO.setup(led, GPIO.OUT)
+GPIO.setup(rfid_led, GPIO.OUT)
 
 #Sets up Error LED
-GPIO.setup(ledred, GPIO.OUT)
+GPIO.setup(err_led, GPIO.OUT)
 
 # Sets up Relays
 GPIO.setup(relay1, GPIO.OUT)
@@ -71,8 +71,8 @@ def create_sequence(filename):
                     ind += 1
                 elif key not in ("on", "off", "tmr"):
                     sequence = {}
-                    part_num = None
-                    return part_num, sequence
+                    part = None
+                    return part, sequence
     return part, sequence
 
 
@@ -90,9 +90,6 @@ def evaluate_seq(seq_dict, relays):
                         pass
             except:
                 b = False
-                gpio_high(err_led)
-                time.sleep(10)
-                GPIO.cleanup()
     return b
 
 def run_sequence(seq_dict, relays):
@@ -123,8 +120,8 @@ def add_timestamp():
     with open(path + filename, "a", newline="") as fa, \
             open(path + filename, "r", newline='') as fr:
         writer = csv.writer(fa, delimiter=",")
-        line = fr.readline()  # check if empty
-        if not line:  # if empty, add header
+        line = fr.readline() 
+        if not line:  # if CSV is empty, add header
             header = ("Machine", "Part", "Card_ID",
                       "User_ID", "Time", "Date")
             writer.writerow(header)
@@ -135,12 +132,14 @@ def add_timestamp():
 # Initializes relays to the off positions
 gpio_high(relays)
 # Initializes rfid LED to off
-gpio_low(led)
+gpio_low(rfid_led)
 # Initializes Error LED
-gpio_low(ledred)
+gpio_low(err_led)
+
 # Instantiates the sequence
 txt_file = "/home/pi/Desktop/instructions"
 part_num, seq = create_sequence(txt_file)
+
 # Evaluates the sequence
 test = evaluate_seq(seq, relays)
 
@@ -151,18 +150,17 @@ if test:
             id_num, user = reader.read()
 
             if user is not None:
-                gpio_high(led)         # Turns on RFID LED indicator
+                gpio_high(rfid_led)
 
-                # Waits 7 seconds for button press to trigger relay
-                button = GPIO.wait_for_edge(22, GPIO.RISING, timeout=7000)
-                if button is None:
-                    gpio_low(led)
-                    pass
-                else:
+                # Waits 7 seconds for button press to run the sequence
+                trigger = GPIO.wait_for_edge(button, GPIO.RISING, timeout=7000)
+                if trigger:
                     run_sequence(seq, relays)
                     add_timestamp()
-
-                gpio_low(led)        # Turns off RFID LED indicator
+                elif trigger is None:
+                    pass
+                    
+                gpio_low(rfid_led)   
                 user = None
 
     except KeyboardInterrupt:
@@ -172,3 +170,8 @@ if test:
     except Exception as e:
         GPIO.cleanup()
         print(e)
+
+else:
+    gpio_high(err_led)
+    time.sleep(10)
+    gpio.cleanup()
