@@ -58,21 +58,26 @@ def create_sequence(filename):
             elif "#" in line:
                 pass
             else:
-                key, value = line.strip().split(",")
-                key = key.lower()
-                if "part" in key:
-                    part = value
-                elif key == "tmr":
-                    value = float(value) / 1000
-                    sequence[str(ind) + "- " + key] = float(value)
-                    ind += 1
-                elif key in ("on", "off"):
-                    sequence[str(ind) + "- " + key] = "relay" + value
-                    ind += 1
-                elif key not in ("on", "off", "tmr"):
+                try:
+                    key, value = line.strip().split(",")
+                    key = key.lower()
+                    if "part" in key:
+                        part = value
+                    elif key == "tmr":
+                        value = float(value) / 1000
+                        sequence[str(ind) + "- " + key] = float(value)
+                        ind += 1
+                    elif key in ("on", "off"):
+                        sequence[str(ind) + "- " + key] = "relay" + value
+                        ind += 1
+                    elif key not in ("on", "off", "tmr"):
+                        sequence = {}
+                        part = None
+                        return part, sequence
+                except:
                     sequence = {}
                     part = None
-                    return part, sequence
+                    return part, sequence               
     return part, sequence
 
 
@@ -84,12 +89,15 @@ def evaluate_seq(seq_dict, relays):
     if seq_dict:
         b = True
         for key, value in seq_dict.items():
-            try:
-                if "on" in key or "off" in key:
+            if "on" in key or "off" in key:
+                try:
                     if eval(value) in relays:
                         pass
-            except:
-                b = False
+                    elif eval(value) not in relays:
+                        b = False
+                        return b
+                except:
+                    b = False
     return b
 
 def run_sequence(seq_dict, relays):
