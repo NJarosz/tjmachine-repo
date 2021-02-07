@@ -5,7 +5,7 @@ import time
 import csv
 
 # TJ Machine number
-MACH_NUM = 100
+PI_NUM = 100
 
 # Sets GPIO layout
 GPIO.setmode(GPIO.BCM)
@@ -14,11 +14,12 @@ reader = SimpleMFRC522()
 # Sets up active GPIO's as variables
 rfid_led = 12
 err_led = 6
-button = 22
+button = 16
 relay1 = 4
 relay2 = 17
 relay3 = 27
-relays = (relay1, relay2, relay3)
+relay4 = 22
+relays = (relay1, relay2, relay3, relay4)
 
 # Sets up Button
 GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
@@ -33,6 +34,7 @@ GPIO.setup(err_led, GPIO.OUT)
 GPIO.setup(relay1, GPIO.OUT)
 GPIO.setup(relay2, GPIO.OUT)
 GPIO.setup(relay3, GPIO.OUT)
+GPIO.setup(relay4, GPIO.OUT)
 
 
 #Creates functions to control GPIO pins.
@@ -63,6 +65,8 @@ def create_sequence(filename):
                     key = key.lower()
                     if "part" in key:
                         part = value
+                    elif "mach" in key:
+                        mach = value
                     elif key == "tmr":
                         value = float(value) / 1000
                         sequence[str(ind) + "- " + key] = value
@@ -73,12 +77,14 @@ def create_sequence(filename):
                     elif key not in ("on", "off", "tmr"):
                         sequence = {}
                         part = None
-                        return part, sequence
+                        mach = None
+                        return part, mach, sequence
                 except:
                     sequence = {}
                     part = None
-                    return part, sequence               
-    return part, sequence
+                    mach = None
+                    return part, mach, sequence               
+    return part, mach, sequence
 
 
 def evaluate_seq(seq_dict, relays):
@@ -122,15 +128,15 @@ def add_timestamp():
     number, part number, id number, user, time, date"""
     today = date.today()
     now = time.strftime("%H:%M:%S")
-    data = (MACH_NUM, part_num, id_num, user.strip(), now, today)
+    data = (PI_NUM, mach_num, part_num, id_num, user.strip(), now, today)
     path = "/home/pi/Documents/CSV/"
-    filename = today.strftime("%Y%m%d") + f"Machine{MACH_NUM}.csv"
+    filename = today.strftime("%Y%m%d") + f"Machine{PI_NUM}.csv"
     with open(path + filename, "a", newline="") as fa, \
             open(path + filename, "r", newline='') as fr:
         writer = csv.writer(fa, delimiter=",")
         line = fr.readline() 
         if not line:  # if CSV is empty, add header
-            header = ("Machine", "Part", "Card_ID",
+            header = ("Pi", "Machine", "Part", "Card_ID",
                       "User_ID", "Time", "Date")
             writer.writerow(header)
         writer.writerow(data)
@@ -146,7 +152,7 @@ gpio_low(err_led)
 
 # Instantiates the sequence
 txt_file = "/home/pi/Desktop/instructions"
-part_num, seq = create_sequence(txt_file)
+part_num, mach_num, seq = create_sequence(txt_file)
 
 # Evaluates the sequence
 test = evaluate_seq(seq, relays)
