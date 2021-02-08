@@ -1,7 +1,6 @@
 from gpiozero import LED, Button, OutputDevice
 from mfrc522 import SimpleMFRC522
 from datetime import date
-import os
 import time
 import csv
 
@@ -164,9 +163,9 @@ if gate:
 
                 # Waits 7 seconds for button press to trigger relay
                 if button1.wait_for_press(timeout=7):
-                    if button1.wait_for_release():
-                        run_sequence()
-                        add_timestamp()
+                    run_sequence()
+                    add_timestamp()
+                button1.wait_for_release()
                 user = None   
                 rfid_led.off()
                 
@@ -174,6 +173,8 @@ if gate:
     except KeyboardInterrupt:
         for relay in relays:
             relay.off()
+        err_led.on()
+        time.sleep(10)
             
 else:
     err_led.on()
