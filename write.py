@@ -9,6 +9,7 @@ try:
     print("Now place your tag to write")
     reader.write(text)
     idn, name = reader.read()
+    print("Wow, isn't this fun?!")
     print("Written: " + str(idn) + " " + name)
 finally:
     GPIO.cleanup()
