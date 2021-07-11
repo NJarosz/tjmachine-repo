@@ -237,13 +237,6 @@ if seq_gate:
                             count += 1
                             write_count(count)
 
-                        if button1.is_held:
-                            count = 0
-                            write_count(count)
-                            lcd.clear()
-                            lcd.message(f"Cnt: {count}", 2)
-                            time.sleep(5)
-
                         if date.today() != today:
                             today, file_path = update_csv()
 
