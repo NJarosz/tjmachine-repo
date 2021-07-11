@@ -101,17 +101,29 @@ def write_count(part_count, file=count_path):
 
 count = read_count()
 
-def evaluate_seq(seq_dict, relays, part, mach):
+def evaluate_part(part):
+    a = False
+    if part == None len(part) == 0:
+        return a
+    else:
+        a = True
+        return a
+
+def evaluate_mach(mach):
+    a = False
+    if mach == None len(mach) == 0:
+        return a
+    else:
+        a = True
+        return a
+
+def evaluate_seq(seq_dict, relays):
     """tries to catch any typos in relay 
     numbers in the sequence created by
     create_sequence(). If there's an invalid
     relay number in sequence, error led
     turns on."""
     b = False
-    if part == None or mach == None:
-        return b 
-    if len(part) == 0 or len(mach) == 0:
-        return b
     if seq_dict:
         b = True
         for key, value in seq_dict.items():
@@ -187,47 +199,58 @@ def run_sequence(seq_dict=seq, relays=relays):
 
         
 # Evaluates the sequence
-gate = evaluate_seq(seq, relays, part_num, mach_num)
+seq_gate = evaluate_seq(seq, relays)
+part_gate = evaluate_part(part_num)
+mach_gate = evaluate_mach(mach_num)
 
-if gate:
-    lcd.clear()
-    today, file_path = update_csv()
+if seq_gate:
+    if part_gate:
+        if mach_gate:
+            lcd.clear()
+            today, file_path = update_csv()
 
-    try:
-        while True:
+            try:
+                while True:
 
-            # Read info on RFID card, if present
-            #id_num, user = reader.read()
-            user = "tj user"
-            lcd.message(f"{part_num} {mach_num}",1)
-            if user != None:
-                lcd.message(f"Cnt: {count}",2)
-                # Waits 7 seconds for button press to trigger relay
-                if button1.is_pressed:
-                    button1.wait_for_release()
-                    run_sequence()
-                    add_timestamp(shot, file_path)
-                    count += 1
-                    write_count(count)
+                    # Read info on RFID card, if present
+                    #id_num, user = reader.read()
+                    user = "tj user"
+                    lcd.message(f"{part_num} {mach_num}",1)
+                    if user != None:
+                        lcd.message(f"Cnt: {count}",2)
+                        # Waits 7 seconds for button press to trigger relay
+                        if button1.is_pressed:
+                            button1.wait_for_release()
+                            run_sequence()
+                            add_timestamp(shot, file_path)
+                            count += 1
+                            write_count(count)
 
-                if date.today() != today:
-                    today, file_path = update_csv()
-                
+                        if date.today() != today:
+                            today, file_path = update_csv()
 
 
-        
-    except KeyboardInterrupt:
-        for relay in relays:
-            relay.off()
 
-    except Exception as e:
-        print(e)
+
+            except KeyboardInterrupt:
+                for relay in relays:
+                    relay.off()
+
+            except Exception as e:
+                print(e)
+                lcd.clear()
+                lcd.message("except",1)
+                time.sleep(10)
+
+
+        else:
+            lcd.clear()
+            lcd.message("Invalid Mach #",1)
+
+    else:
         lcd.clear()
-        lcd.message("except",1)
-        time.sleep(10)
-
-            
+        lcd.message("Invalid Part #")
 else:
     lcd.clear()
-    lcd.message("NOTWORK",1)
-    time.sleep(10)
+    lcd.message("Invalid",1)
+    lcd.message("Sequence",2)
