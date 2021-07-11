@@ -2,8 +2,6 @@
 # Original code found at:
 # https://gist.github.com/DenisFromHR/cc863375a6e19dce359d
 
-# http://www.circuitbasics.com/raspberry-pi-i2c-lcd-set-up-and-programming/
-
 """
 Compiled, mashed and generally mutilated 2014-2015 by Denis Pleic
 Made available under GNU GENERAL PUBLIC LICENSE
@@ -145,7 +143,7 @@ class lcd:
       self.lcd_write_four_bits(mode | ((charvalue << 4) & 0xF0))
   
    # put string function with optional char positioning
-   def lcd_display_string(self, string, line=1, pos=0):
+   def message(self, string, line=1, pos=0):
     if line == 1:
       pos_new = pos
     elif line == 2:
@@ -161,7 +159,7 @@ class lcd:
       self.lcd_write(ord(char), Rs)
 
    # clear lcd and set to home
-   def lcd_clear(self):
+   def clear(self):
       self.lcd_write(LCD_CLEARDISPLAY)
       self.lcd_write(LCD_RETURNHOME)
 
@@ -177,4 +175,4 @@ class lcd:
       self.lcd_write(0x40);
       for char in fontdata:
          for line in char:
-            self.lcd_write_char(line) 
+            self.lcd_write_char(line)         
