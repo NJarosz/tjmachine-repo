@@ -200,12 +200,14 @@ def run_sequence(seq_dict=seq, relays=relays):
 def reset_count():
     global count
     global lcd
+    global endloop
     count = 0
     write_count(count)
     lcd.clear()
     lcd.message(f"Cnt: {count}", 2)
     time.sleep(5)
-    button1.when_released = None
+    endloop=True
+    return endloop
     return count
 
 def run_mach():
@@ -232,7 +234,7 @@ if seq_gate:
             try:
 
                 while True:
-
+                    endloop = False
                     # Read info on RFID card, if present
                     #id_num, user = reader.read()
                     user = "tj user"
@@ -240,6 +242,8 @@ if seq_gate:
                     if user != None:
                         lcd.message(f"Cnt: {count}",2)
                         button1.when_held = reset_count
+                        if endloop == True:
+                            break
                         button1.when_released = run_mach
                         # Waits 7 seconds for button press to trigger relay
                         # if button1.is_pressed:
