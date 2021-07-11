@@ -238,10 +238,10 @@ if seq_gate:
             lcd.clear()
             today, file_path = update_csv()
             user = 'tj user'
+            hold = False
             try:
 
                 while True:
-                    hold = False
                     # Read info on RFID card, if present
                     #id_num, user = reader.read()
                     user = "tj user"
