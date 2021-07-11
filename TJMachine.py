@@ -229,8 +229,7 @@ if seq_gate:
             today, file_path = update_csv()
             user = 'tj user'
             try:
-                button1.when_held = reset_count
-                button1.when_pressed = run_mach
+
                 while True:
 
                     # Read info on RFID card, if present
@@ -239,6 +238,8 @@ if seq_gate:
                     lcd.message(f"{part_num} {mach_num}",1)
                     if user != None:
                         lcd.message(f"Cnt: {count}",2)
+                        button1.when_held = reset_count
+                        button1.when_pressed = run_mach
                         # Waits 7 seconds for button press to trigger relay
                         # if button1.is_pressed:
                         #     button1.wait_for_release()
