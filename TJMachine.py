@@ -198,25 +198,14 @@ def run_sequence(seq_dict=seq, relays=relays):
             relay.off()
 
 def reset_count():
-    global count
     global lcd
     count = 0
     write_count(count)
     lcd.clear()
+    lcd.message("Cnt = 0",1)
     time.sleep(5)
     return count
 
-def run_mach():
-    global count
-    global button1
-    if button1.is_held:
-        pass
-    else:
-        run_sequence()
-        add_timestamp(shot, file_path)
-        count += 1
-        write_count(count)
-        return count
 
 # Evaluates the sequence
 seq_gate = evaluate_seq(seq, relays)
@@ -238,15 +227,13 @@ if seq_gate:
                     lcd.message(f"{part_num} {mach_num}",1)
                     if user != None:
                         lcd.message(f"Cnt: {count}",2)
-                        button1.when_held = reset_count
-                        button1.when_released = run_mach
-                        # Waits 7 seconds for button press to trigger relay
-                        # if button1.is_pressed:
-                        #     button1.wait_for_release()
-                        #     run_sequence()
-                        #     add_timestamp(shot, file_path)
-                        #     count += 1
-                        #     write_count(count)
+
+                        if button1.is_pressed:
+                            button1.wait_for_release()
+                            run_sequence()
+                            add_timestamp(shot, file_path)
+                            count += 1
+                            write_count(count)
 
                         if date.today() != today:
                             today, file_path = update_csv()
