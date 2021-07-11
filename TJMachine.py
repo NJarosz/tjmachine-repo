@@ -235,7 +235,6 @@ if seq_gate:
                     # Read info on RFID card, if present
                     #id_num, user = reader.read()
                     user = "tj user"
-                    print(hold)
                     lcd.message(f"{part_num} {mach_num}",1)
                     if user != None:
                         lcd.message(f"Cnt: {count}",2)
