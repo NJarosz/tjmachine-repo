@@ -11,8 +11,6 @@ with open("/etc/hostname", "r") as hn:
     pi = hn.readline().rstrip("\n")
     
 # Sets up active GPIO's as variables
-# rfid_led = LED(12)
-# err_led = LED(5)
 
 lcd = I2C_LCD_driver.lcd()
 relay1 = OutputDevice(4, active_high=False)
@@ -80,6 +78,7 @@ def create_sequence(filename):
 txt_file = read_main()
 filename = "/home/pi/Desktop/" + str(txt_file)
 part_num, mach_num, seq = create_sequence(filename)
+print(part_num, mach_num)
 
 
 def evaluate_seq(seq_dict, relays, part, mach):
@@ -116,7 +115,7 @@ def add_timestamp():
     now = time.strftime("%H:%M:%S")
     data = (pi, mach_num, part_num, user, now, today)
     path = "/home/pi/Documents/CSV/"
-    filename = today.strftime("%Y%m%d") + f"PI{pi}.csv"
+    filename = today.strftime("%Y%m%d") + f"{pi}.csv"
     with open(path + filename, "a", newline="") as fa, \
             open(path + filename, "r", newline='') as fr:
         writer = csv.writer(fa, delimiter=",")
@@ -155,22 +154,22 @@ def run_sequence(seq_dict=seq, relays=relays):
 gate = evaluate_seq(seq, relays, part_num, mach_num)
 
 if gate:
+    lcd.clear()
     try:
         while True:
 
             # Read info on RFID card, if present
             #id_num, user = reader.read()
             user = "TJ USER"
-
-            if user is not None:
-                lcd.message(part_num, mach_num,1)
-
-
+            lcd.message(f"{part_num} {mach_num}",1)
+            if user != None:
+                
                 # Waits 7 seconds for button press to trigger relay
-                if button1.wait_for_press(timeout=7):
+                if button1.is_pressed:
+                    button1.wait_for_release()
                     run_sequence()
                     add_timestamp()
-                button1.wait_for_release()
+                
 
 
         
@@ -178,11 +177,14 @@ if gate:
         for relay in relays:
             relay.off()
 
-    except:
-        # err_led.on()
+    except Exception as e:
+        print(e)
+        lcd.clear()
+        lcd.message("except",1)
         time.sleep(10)
 
             
 else:
-    # err_led.on()
+    lcd.clear()
+    lcd.message("NOTWORK",1)
     time.sleep(10)
