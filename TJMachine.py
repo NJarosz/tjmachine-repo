@@ -161,7 +161,7 @@ if gate:
             user = user.strip()
 
             if user is not None:
-                rfid_led.on()
+                # rfid_led.on()
 
                 # Waits 7 seconds for button press to trigger relay
                 if button1.wait_for_press(timeout=7):
@@ -169,11 +169,11 @@ if gate:
                     add_timestamp()
                 button1.wait_for_release()
                 user = None   
-                rfid_led.off()
+                # rfid_led.off()
                 
 
     except:
-        err_led.on()
+        # err_led.on()
         time.sleep(10)
         
     except KeyboardInterrupt:
@@ -181,5 +181,5 @@ if gate:
             relay.off()
             
 else:
-    err_led.on()
+    # err_led.on()
     time.sleep(10)
