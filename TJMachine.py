@@ -200,32 +200,23 @@ def run_sequence(seq_dict=seq, relays=relays):
 def reset_count():
     global count
     global lcd
-    global hold
     count = 0
     write_count(count)
     lcd.clear()
-    lcd.message(f"Cnt: {count}", 2)
     time.sleep(5)
-    hold =True
-    return hold
     return count
 
 def run_mach():
     global count
     global button1
-    global hold
-    if hold == True:
+    if button1.is_held:
         pass
-        hold = False
     else:
-        button1.wait_for_release()
         run_sequence()
         add_timestamp(shot, file_path)
         count += 1
         write_count(count)
-        hold = False
         return count
-    return hold
 
 # Evaluates the sequence
 seq_gate = evaluate_seq(seq, relays)
@@ -238,7 +229,6 @@ if seq_gate:
             lcd.clear()
             today, file_path = update_csv()
             user = 'tj user'
-            hold = False
             try:
 
                 while True:
