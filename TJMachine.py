@@ -205,12 +205,13 @@ def reset_count():
     lcd.clear()
     lcd.message(f"Cnt: {count}", 2)
     time.sleep(5)
+    button1.when_released = None
     return count
 
 def run_mach():
     global count
     global button1
-    #button1.wait_for_release()
+    button1.wait_for_release()
     run_sequence()
     add_timestamp(shot, file_path)
     count += 1
@@ -239,7 +240,7 @@ if seq_gate:
                     if user != None:
                         lcd.message(f"Cnt: {count}",2)
                         button1.when_held = reset_count
-                        button1.when_pressed = run_mach
+                        button1.when_released = run_mach
                         # Waits 7 seconds for button press to trigger relay
                         # if button1.is_pressed:
                         #     button1.wait_for_release()
