@@ -197,7 +197,18 @@ def run_sequence(seq_dict=seq, relays=relays):
         for relay in relays:
             relay.off()
 
-        
+def reset_count():
+    global count
+    global lcd
+    count = 0
+    write_count(count)
+    lcd.clear()
+    lcd.message(f"Cnt: {count}", 2)
+    time.sleep(5)
+    return count
+
+button1.when_held = reset_count
+
 # Evaluates the sequence
 seq_gate = evaluate_seq(seq, relays)
 part_gate = evaluate_part(part_num)
