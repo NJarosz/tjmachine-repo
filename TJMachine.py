@@ -52,9 +52,9 @@ def create_sequence(filename):
                     key, value = line.replace(' ','').strip().split(",")
                     key = key.lower()
                     if "part" in key:
-                        part = value
+                        part = int(value)
                     elif "mach" in key:
-                        mach = value
+                        mach = int(value)
                     elif key == "tmr":
                         value = float(value) / 1000
                         sequence[str(ind) + "- " + key] = float(value)
