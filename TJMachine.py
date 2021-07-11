@@ -210,7 +210,7 @@ def reset_count():
 def run_mach():
     global count
     global button1
-    button1.wait_for_release()
+    #button1.wait_for_release()
     run_sequence()
     add_timestamp(shot, file_path)
     count += 1
