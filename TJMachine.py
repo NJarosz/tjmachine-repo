@@ -170,15 +170,16 @@ if gate:
                 button1.wait_for_release()
                 user = None   
                 # rfid_led.off()
-                
 
-    except:
-        # err_led.on()
-        time.sleep(10)
         
     except KeyboardInterrupt:
         for relay in relays:
             relay.off()
+
+    except:
+        # err_led.on()
+        time.sleep(10)
+
             
 else:
     # err_led.on()
