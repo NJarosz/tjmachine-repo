@@ -16,7 +16,7 @@ relay2 = OutputDevice(17, active_high=False)
 relay3 = OutputDevice(27, active_high=False)
 relay4 = OutputDevice(22, active_high=False)
 relays = (relay1, relay2, relay3, relay4)
-button1 = Button(26, pull_up=True)
+button1 = Button(26, pull_up=True, hold_time=3)
 
 # Variables/paths
 csv_path = "/home/pi/Documents/CSV/"
@@ -226,8 +226,14 @@ if seq_gate:
                             count += 1
                             write_count(count)
 
+                        if button1.is_held:
+                            button1.wait_for_release()
+                            count = 0
+                            write_count(count)
+
                         if date.today() != today:
                             today, file_path = update_csv()
+
 
 
 
