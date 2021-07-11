@@ -5,11 +5,13 @@ import time
 import csv
 
 # TJ Machine number
-PI_NUM = '01'
+
+with open("/etc/hostname", "r") as hn:
+    pi = hn.readline().rstrip("\n")
     
 # Sets up active GPIO's as variables
-rfid_led = LED(12)
-err_led = LED(5)
+# rfid_led = LED(12)
+# err_led = LED(5)
 
 relay1 = OutputDevice(4, active_high=False)
 relay2 = OutputDevice(17, active_high=False)
@@ -110,7 +112,7 @@ def add_timestamp():
     number, part number, id number, user, time, date"""
     today = date.today()
     now = time.strftime("%H:%M:%S")
-    data = (PI_NUM, mach_num, part_num, id_num, user, now, today)
+    data = (pi, mach_num, part_num, user, now, today)
     path = "/home/pi/Documents/CSV/"
     filename = today.strftime("%Y%m%d") + f"PI{PI_NUM}.csv"
     with open(path + filename, "a", newline="") as fa, \
