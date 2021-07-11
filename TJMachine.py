@@ -1,10 +1,11 @@
 from gpiozero import LED, Button, OutputDevice
 from mfrc522 import SimpleMFRC522
+import I2C_LCD_driver
 from datetime import date
 import time
 import csv
 
-# TJ Machine number
+# PLC Number
 
 with open("/etc/hostname", "r") as hn:
     pi = hn.readline().rstrip("\n")
@@ -13,6 +14,7 @@ with open("/etc/hostname", "r") as hn:
 # rfid_led = LED(12)
 # err_led = LED(5)
 
+lcd = I2C_LCD_driver.lcd()
 relay1 = OutputDevice(4, active_high=False)
 relay2 = OutputDevice(17, active_high=False)
 relay3 = OutputDevice(27, active_high=False)
@@ -22,7 +24,7 @@ relays = (relay1, relay2, relay3, relay4)
 button1 = Button(26, pull_up=True)
 
 # Sets up RFID Reader
-reader = SimpleMFRC522()
+#reader = SimpleMFRC522()
 
 
 def read_main():
@@ -114,13 +116,13 @@ def add_timestamp():
     now = time.strftime("%H:%M:%S")
     data = (pi, mach_num, part_num, user, now, today)
     path = "/home/pi/Documents/CSV/"
-    filename = today.strftime("%Y%m%d") + f"PI{PI_NUM}.csv"
+    filename = today.strftime("%Y%m%d") + f"PI{pi}.csv"
     with open(path + filename, "a", newline="") as fa, \
             open(path + filename, "r", newline='') as fr:
         writer = csv.writer(fa, delimiter=",")
         line = fr.readline()  # check if empty
         if not line:  # if empty, add header
-            header = ("pi", "Machine", "Part", "Card_ID",
+            header = ("pi", "Machine", "Part",
                       "User_ID", "Time", "Date")
             writer.writerow(header)
         writer.writerow(data)
@@ -157,19 +159,19 @@ if gate:
         while True:
 
             # Read info on RFID card, if present
-            id_num, user = reader.read()
-            user = user.strip()
+            #id_num, user = reader.read()
+            user = "TJ USER"
 
             if user is not None:
-                # rfid_led.on()
+                lcd.message(part_num, mach_num,1)
+
 
                 # Waits 7 seconds for button press to trigger relay
                 if button1.wait_for_press(timeout=7):
                     run_sequence()
                     add_timestamp()
                 button1.wait_for_release()
-                user = None   
-                # rfid_led.off()
+
 
         
     except KeyboardInterrupt:
