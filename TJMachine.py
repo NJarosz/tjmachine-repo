@@ -206,6 +206,14 @@ def reset_count():
     lcd.message(f"Cnt: {count}", 2)
     time.sleep(5)
     return count
+def run_mach():
+    global count
+    global button1
+    button1.wait_for_release()
+    run_sequence()
+    add_timestamp(shot, file_path)
+    count += 1
+    write_count(count)
 
 button1.when_held = reset_count
 
@@ -219,23 +227,25 @@ if seq_gate:
         if mach_gate:
             lcd.clear()
             today, file_path = update_csv()
-
+            user = 'tj user'
             try:
+                button1.when_held = reset_count
+                button1.when_pressed = run_mach
                 while True:
 
-                    # Read info on RFID card, if present
-                    #id_num, user = reader.read()
-                    user = "tj user"
-                    lcd.message(f"{part_num} {mach_num}",1)
-                    if user != None:
-                        lcd.message(f"Cnt: {count}",2)
-                        # Waits 7 seconds for button press to trigger relay
-                        if button1.is_pressed:
-                            button1.wait_for_release()
-                            run_sequence()
-                            add_timestamp(shot, file_path)
-                            count += 1
-                            write_count(count)
+                    # # Read info on RFID card, if present
+                    # #id_num, user = reader.read()
+                    # user = "tj user"
+                    # lcd.message(f"{part_num} {mach_num}",1)
+                    # if user != None:
+                    #     lcd.message(f"Cnt: {count}",2)
+                    #     # Waits 7 seconds for button press to trigger relay
+                    #     if button1.is_pressed:
+                    #         button1.wait_for_release()
+                    #         run_sequence()
+                    #         add_timestamp(shot, file_path)
+                    #         count += 1
+                    #         write_count(count)
 
                         if date.today() != today:
                             today, file_path = update_csv()
