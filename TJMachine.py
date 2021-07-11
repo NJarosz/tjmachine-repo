@@ -103,7 +103,7 @@ count = read_count()
 
 def evaluate_part(part):
     a = False
-    if part == None len(part) == 0:
+    if part == None or len(part) == 0:
         return a
     else:
         a = True
@@ -111,7 +111,7 @@ def evaluate_part(part):
 
 def evaluate_mach(mach):
     a = False
-    if mach == None len(mach) == 0:
+    if mach == None or len(mach) == 0:
         return a
     else:
         a = True
