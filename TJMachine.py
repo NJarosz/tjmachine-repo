@@ -148,7 +148,7 @@ def add_timestamp(cat, file):
     filename. Adds timestamp to that csv including machine
     number, part number, id number, user, time, date"""
     now = time.strftime("%H:%M:%S")
-    data = (cat, pi, mach_num, part_num, emp_num, now, today)
+    data = (cat, pi, mach_num, part_num, user, now, today)
     with open(file, "a", newline="") as fa:
         writer = csv.writer(fa, delimiter=",")
         writer.writerow(data)
