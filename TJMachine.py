@@ -17,6 +17,7 @@ relay3 = OutputDevice(27, active_high=False)
 relay4 = OutputDevice(22, active_high=False)
 relays = (relay1, relay2, relay3, relay4)
 button1 = Button(26, pull_up=True, hold_time=3)
+button2 = Button(16, pull_up=True, hold_time=2)
 
 # Variables/paths
 csv_path = "/home/pi/Documents/CSV/"
@@ -198,12 +199,9 @@ def run_sequence(seq_dict=seq, relays=relays):
             relay.off()
 
 def reset_count():
-    global lcd
+    global count
     count = 0
     write_count(count)
-    lcd.clear()
-    lcd.message("Cnt = 0",1)
-    time.sleep(5)
     return count
 
 
@@ -223,7 +221,7 @@ if seq_gate:
                 while True:
                     # Read info on RFID card, if present
                     #id_num, user = reader.read()
-                    user = "tj user"
+                    button2.when_held = reset_count
                     lcd.message(f"{part_num} {mach_num}",1)
                     if user != None:
                         lcd.message(f"Cnt: {count}",2)
@@ -234,11 +232,9 @@ if seq_gate:
                             count += 1
                             write_count(count)
                             button1.wait_for_release()
-
+                    
                         if date.today() != today:
                             today, file_path = update_csv()
-
-
 
 
 
