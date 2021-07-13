@@ -200,8 +200,10 @@ def run_sequence(seq_dict=seq, relays=relays):
 
 def reset_count():
     global count
+    global lcd
     count = 0
     write_count(count)
+    lcd.clear()
     return count
 
 
