@@ -229,11 +229,11 @@ if seq_gate:
                         lcd.message(f"Cnt: {count}",2)
 
                         if button1.is_pressed:
-                            button1.wait_for_release()
                             run_sequence()
                             add_timestamp(shot, file_path)
                             count += 1
                             write_count(count)
+                            button1.wait_for_release()
 
                         if date.today() != today:
                             today, file_path = update_csv()
