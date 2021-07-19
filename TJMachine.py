@@ -225,7 +225,7 @@ if seq_gate:
                             add_timestamp(shot, file_path)
                             count += 1
                             write_count(count)
-                            lcd.clear()
+                            lcd.message("              ",2)
                             button1.wait_for_release()
                         
                         if button2.is_pressed:
