@@ -198,14 +198,6 @@ def run_sequence(seq_dict=seq, relays=relays):
         for relay in relays:
             relay.off()
 
-def reset_count():
-    global count
-    global lcd
-    count = 0
-    write_count(count)
-    lcd.clear()
-    return count
-
 
 # Evaluates the sequence
 seq_gate = evaluate_seq(seq, relays)
@@ -223,17 +215,22 @@ if seq_gate:
                 while True:
                     # Read info on RFID card, if present
                     #id_num, user = reader.read()
-                    button2.when_held = reset_count
+                    lcd.clear()
                     lcd.message(f"{part_num} {mach_num}",1)
+                    lcd.message(f"Cnt: {count}",2)
                     if user != None:
-                        lcd.message(f"Cnt: {count}",2)
-
+                       
                         if button1.is_pressed:
                             run_sequence()
                             add_timestamp(shot, file_path)
                             count += 1
                             write_count(count)
                             button1.wait_for_release()
+                        
+                        if button2.is_pressed:
+                            count = 0
+                            write_count(count)
+                            button2.wait_for_release()
                     
                         if date.today() != today:
                             today, file_path = update_csv()
