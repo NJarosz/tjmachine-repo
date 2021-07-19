@@ -17,7 +17,7 @@ relay3 = OutputDevice(27, active_high=False)
 relay4 = OutputDevice(22, active_high=False)
 relays = (relay1, relay2, relay3, relay4)
 button1 = Button(26, pull_up=True, hold_time=3)
-button2 = Button(16, pull_up=True, hold_time=2)
+button2 = Button(16, pull_up=True, hold_time=1)
 
 # Variables/paths
 csv_path = "/home/pi/Documents/CSV/"
