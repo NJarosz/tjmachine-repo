@@ -215,7 +215,7 @@ if seq_gate:
                 while True:
                     # Read info on RFID card, if present
                     #id_num, user = reader.read()
-                    lcd.clear()
+                   
                     lcd.message(f"{part_num} {mach_num}",1)
                     lcd.message(f"Cnt: {count}",2)
                     if user != None:
@@ -225,11 +225,13 @@ if seq_gate:
                             add_timestamp(shot, file_path)
                             count += 1
                             write_count(count)
+                            lcd.clear()
                             button1.wait_for_release()
                         
                         if button2.is_pressed:
                             count = 0
                             write_count(count)
+                            lcd.clear()
                             button2.wait_for_release()
                     
                         if date.today() != today:
