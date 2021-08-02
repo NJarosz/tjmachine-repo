@@ -31,6 +31,7 @@ lcd = I2C_LCD_driver.lcd()
 csv_path = "/home/pi/Documents/CSV/"
 count_pkl = "/home/pi/Documents/counts.pickle"
 prod_vars_pkl = "/home/pi/Documents/vars.pickle"
+main = "/home/pi/Desktop/main"
 file_path = ""
 logon = "LOG_ON"
 logout = "LOG_OFF"
