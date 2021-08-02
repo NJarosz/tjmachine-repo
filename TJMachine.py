@@ -381,7 +381,7 @@ try:
                             else:
                                 invalid_params()
                         if red_button.is_pressed:
-                            button1.wait_for_release()
+                            red_button.wait_for_release()
                             time.sleep(0.2)
                             mode = modes["menu"]
                 else:
