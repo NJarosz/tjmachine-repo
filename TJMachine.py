@@ -158,9 +158,7 @@ def create_sequence(filename):
                         ind += 1
                     elif key not in ("on", "off", "tmr"):
                         sequence = {}
-                        part = None
-                        mach = None
-                        return part, mach, sequence
+                        return sequence
                 except:
                     sequence = {}
     return sequence
