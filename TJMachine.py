@@ -283,7 +283,7 @@ def evaluate_seq(seq_dict, relays):
                     b = False           
     return b
 
-def invalid_sequence()
+def invalid_sequence():
     lcd.clear()
     lcd.message(invalid_msg)
     time.sleep(30)
