@@ -49,7 +49,8 @@ mode = modes["standby"]
 startup = True
 maint_msg = "Maintenance"
 maint_end_msg = "Maintenance End"
-invalid_msg = "Invalid Info"
+invalid_msg = "Invalid Data"
+invalid_seq = "Invalid Seq"
 menu_msg_top = "Reset Counter?"
 menu_msg_btm = "Gr=Yes Red=No"
 count_reset_msg = "Counter= 0"
@@ -285,7 +286,7 @@ def evaluate_seq(seq_dict, relays):
 
 def invalid_sequence():
     lcd.clear()
-    lcd.message(invalid_msg)
+    lcd.message(invalid_seq)
     time.sleep(30)
     lcd.clear()
 
