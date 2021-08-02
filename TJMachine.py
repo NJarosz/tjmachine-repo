@@ -258,7 +258,6 @@ def change_msg(msg, sec=1, line=1):
     time.sleep(sec)
 
 def logout_func(file_path):
-    sig_out.off()
     add_timestamp(logout, file_path)
     change_msg(logoutm, sec=1)
 
@@ -346,7 +345,6 @@ try:
                     lcd.message(standby_info_btm, 2)
                     if startup is True:
                         today, file_path = update_csv()
-                        mode = modes["standby"]
                     while mode == modes["standby"]:
                         if date.today() != today:
                             today, file_path = update_csv()
@@ -423,13 +421,11 @@ try:
                 if countset == 0:
                     pass
                 elif run_count == countset:
-                    sig_out.off()
                     run_count = count_reset(run_count)
                     button2.wait_for_press()
                     button2.wait_for_release()
                     lcd.clear()
                     lcd.message(run_msg_top2, 1)
-                    sig_out.on()
                 if hand_button.is_pressed:
                     run_sequence()
                     emp_count += 1
@@ -441,7 +437,6 @@ try:
                     hand_button.wait_for_release()
                 if datetime.now() >= now + timedelta(seconds=300):
                     add_timestamp(timeout, file_path)
-                    sig_out.off()
                     change_msg(timeoutm, sec=5)
                     mode = modes["standby"]
                 if red_button.is_pressed:
@@ -450,7 +445,6 @@ try:
                     mode = modes["standby"]
                 if gr_button.is_pressed:
                     gr_button.wait_for_release()
-                    sig_out.off()
                     mode = modes["maint"]
         elif mode == modes["maint"]:
             add_timestamp(mas, file_path)
