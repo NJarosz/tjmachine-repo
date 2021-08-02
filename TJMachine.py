@@ -4,11 +4,15 @@ import I2C_LCD_driver
 from datetime import date
 import time
 import csv
+import os
+import mysql.connector
 
 # PLC Number
 with open("/etc/hostname", "r") as hn:
     pi = hn.readline().rstrip("\n")
     
+count_num = int(''.join(i for i in pi if i.isdigit()))
+
 # Sets up active GPIO's as variables
 
 relay1 = OutputDevice(4, active_high=False)
@@ -16,16 +20,109 @@ relay2 = OutputDevice(17, active_high=False)
 relay3 = OutputDevice(27, active_high=False)
 relay4 = OutputDevice(22, active_high=False)
 relays = (relay1, relay2, relay3, relay4)
-button1 = Button(26, pull_up=True, hold_time=3)
-button2 = Button(16, pull_up=True, hold_time=1)
+hand_button = Button(26, pull_up=True, hold_time=3)
+gr_button = Button(16, pull_up=True, hold_time=1)
+red_button = Button(12, pull_up=True, hold_time=1)
+reader = SimpleMFRC522()
+lcd = I2C_LCD_driver.lcd()
 
 # Variables/paths
 csv_path = "/home/pi/Documents/CSV/"
+count_pkl = "/home/pi/Documents/counts.pickle"
+prod_vars_pkl = "/home/pi/Documents/vars.pickle"
 file_path = ""
-count_path = "/home/pi/Documents/totalcount"
-main = "/home/pi/Desktop/main"
+logon = "LOG_ON"
+logout = "LOG_OFF"
+timeout = "TIME_OUT"
+mas = "MAS"
+mae = "MAE"
 shot = "SHOT"
-lcd = I2C_LCD_driver.lcd()
+modes = {"setup": 0,
+         "standby": 1,
+         "menu": 2,
+         "run": 3,
+         "maint": 4
+         }
+mode = modes["standby"]
+startup = True
+maint_msg = "Maintenance"
+maint_end_msg = "Maintenance End"
+invalid_msg = "Invalid Info"
+menu_msg_top = "Reset Counter?"
+menu_msg_btm = "Gr=Yes Red=No"
+count_reset_msg = "Counter= 0"
+logoutm = "Logged Out"
+timeoutm = "Timed Out"
+db_name = "device_vars"
+
+try:
+    db_host = os.environ.get("DB_HOST_1")
+    db_user = os.environ.get("DB_USER_1")
+    db_psw = os.environ.get("DB_PSW_1")
+except:
+    pass
+
+# Functions
+
+def read_pckl_counts(pcklfile):
+    # Retrieves backup info stored in pickle files
+    pickle_in = open(pcklfile, "rb")
+    pkl_dict = pickle.load(pickle_in)
+    return pkl_dict
+
+def save_vars(dict, pkl_file):
+    # Saves info to pickle files as a backup
+    with open(pkl_file, "wb") as pckl:
+        pickle.dump(dict, pckl)
+
+prod_vars_dict = read_pckl_counts(prod_vars_pkl)
+
+def read_machvars_db(count_num=count_num):
+    # Attempts to pull current production variables from DB, or else from Pickle Files
+    try:
+        conn = mysql.connector.connect(
+            host=db_host,
+            user=db_user,
+            passwd=db_psw,
+            database=db_name
+        )
+        c = conn.cursor()
+        c.execute("SELECT part FROM data_vars WHERE device_id=%s", (count_num,))
+        part = c.fetchone()
+        part = str(part[0])
+
+        c.execute("SELECT machine FROM data_vars WHERE device_id=%s", (count_num,))
+        mach = c.fetchone()
+        mach = str(mach[0])
+
+        c.execute("SELECT count_goal FROM data_vars WHERE device_id = %s", (count_num,))
+        countset = c.fetchone()
+        countset = int(countset[0])
+        c.close()
+    except:
+        part = str(prod_vars_dict['part'])
+        mach = str(prod_vars_dict['mach'])
+        countset = int(prod_vars_dict['countset'])
+
+    return part, mach, countset
+    
+def ret_emp_name(id_num):
+    # Attempts to retrieve employee name from DB based on the number on their ID card
+    try:
+        conn = mysql.connector.connect(
+            host=db_host,
+            user=db_user,
+            passwd=db_psw,
+            database=db_name
+        )
+        c = conn.cursor()
+        c.execute("SELECT name FROM employees WHERE emp_id=%s", (id_num,))
+        emp_name=c.fetchone()
+        emp_name=str(emp_name[0])
+        c.close()
+        return emp_name
+    except:
+        return None
 
 def read_main(path=main):
     """reads main to determine which
@@ -39,8 +136,6 @@ def create_sequence(filename):
     the text file.  Returns the sequence as a dict 
     and the part number being ran."""
     sequence = {}
-    part = None
-    mach = None
     ind = 1
     with open(filename, 'r') as text:
         for line in text:
@@ -52,11 +147,7 @@ def create_sequence(filename):
                 try:
                     key, value = line.replace(' ','').strip().split(",")
                     key = key.lower()
-                    if "part" in key:
-                        part = int(value)
-                    elif "mach" in key:
-                        mach = int(value)
-                    elif key == "tmr":
+                    if key == "tmr":
                         value = float(value) / 1000
                         sequence[str(ind) + "- " + key] = float(value)
                         ind += 1
@@ -70,53 +161,106 @@ def create_sequence(filename):
                         return part, mach, sequence
                 except:
                     sequence = {}
-                    part = None
-                    mach = None
-    return part, mach, sequence
+    return sequence
 
 
 # Instantiates the sequence
 txt_file = read_main()
 filename = "/home/pi/Desktop/" + str(txt_file)
-part_num, mach_num, seq = create_sequence(filename)
+seq = create_sequence(filename)
 
 
-def read_count(file=count_path):
-    """Reads/ returns running total part count"""
-    with open(file, "r", newline="") as f:
-        total_count = f.readline()
-        if len(str(total_count)) == 0:
-            total_count = 0
+def evaluate_params(part, mach, countset, dicti):
+    b = False
+    try:
+        if part and len(part) != 0:
+            if mach and len(mach) != 0:
+                if type(countset) == int:
+                    b = True
+                    dicti['part'] = part
+                    dicti['mach'] = mach
+                    dicti['countset'] = countset
+    except:
+        b = False
+    return b, dicti
+
+def update_counts(totalcount, runcount):
+    global count_dict
+    totalcount +=1
+    runcount +=1
+    count_dict['totalcount'] = totalcount
+    count_dict['runcount'] = runcount
+    return totalcount, runcount
+
+def count_reset(runcount):
+    global count_dict
+    runcount = 0
+    count_dict['runcount'] = runcount
+    save_vars(count_dict, count_pkl)
+    lcd.clear()
+    lcd.message("PRESS BLK BTN",1)
+    lcd.message("TO RESET", 2)
+    return runcount
+                
+
+def create_file_path(day, path=csv_path):
+    filename = day.strftime("%Y%m%d") + f"{pi}.csv"
+    file_path = path + filename
+    return file_path
+
+def create_csv(file):
+    """creates a new csv file, inserts a header"""
+    with open(file, "a", newline="") as fa, \
+            open(file, "r", newline='') as fr:
+        writer = csv.writer(fa, delimiter=",")
+        line = fr.readline()
+        if not line:  # if CSV is empty, add header
+            header = ("Type", "pi", "Machine", "Part",
+                      "User_ID", "Time", "Date")
+            writer.writerow(header)
+
+
+def add_timestamp(cat, file):
+    """opens or creates a csv file with todays date in
+    filename. Adds timestamp to that csv including machine
+    number, part number, id number, user, time, date"""
+    now = time.strftime("%H:%M:%S")
+    data = (cat, count_num, mach_num, part_num, emp_num, now, today)
+    with open(file, "a", newline="") as fa:
+        writer = csv.writer(fa, delimiter=",")
+        writer.writerow(data)
+
+def update_csv():
+    today = date.today()
+    file_path = create_file_path(day=today)
+    create_csv(file=file_path)
+    return today, file_path
+
+
+def display_run_info(last_display, last_disp_time):
+    lcd.message(run_msg_btm, 2)
+    if datetime.now() > last_disp_time + timedelta(seconds=5):
+        if last_display != 1:
+            lcd.message("                ",1)
+            lcd.message(run_msg_top1, 1)
+            last_display = 1
         else:
-            total_count = int(total_count)
-    return total_count
+            lcd.message("                ",1)
+            lcd.message(run_msg_top2, 1)
+            last_display = 0
+        last_disp_time = datetime.now()
+    return last_display, last_disp_time
 
+def change_msg(msg, sec=1, line=1):
+    lcd.clear()
+    lcd.message(msg, line)
+    time.sleep(sec)
 
-def write_count(part_count, file=count_path):
-    """Writes total part count to totalcount file"""
-    if part_count > 999999:
-        part_count = 0
-    with open(file, "w") as f:
-        f.write(str(part_count))
+def logout_func(file_path):
+    sig_out.off()
+    add_timestamp(logout, file_path)
+    change_msg(logoutm, sec=1)
 
-
-count = read_count()
-
-def evaluate_part(part):
-    a = False
-    if part == None:
-        return a
-    else:
-        a = True
-        return a
-
-def evaluate_mach(mach):
-    a = False
-    if mach == None:
-        return a
-    else:
-        a = True
-        return a
 
 def evaluate_seq(seq_dict, relays):
     """tries to catch any typos in relay 
@@ -139,41 +283,18 @@ def evaluate_seq(seq_dict, relays):
                     b = False           
     return b
 
-def create_file_path(day, path=csv_path):
-    """Creates a new file path from today's date and pi name"""
-    filename = day.strftime("%Y%m%d") + f"{pi}.csv"
-    file_path = path + filename
-    return file_path
-
-def create_csv(file):
-    """creates a new csv file, inserts a header"""
-    with open(file, "a", newline="") as fa, \
-            open(file, "r", newline='') as fr:
-        writer = csv.writer(fa, delimiter=",")
-        line = fr.readline()
-        if not line:  # if CSV is empty, add header
-            header = ("Type", "pi", "Machine", "Part",
-                      "User_ID", "Time", "Date")
-            writer.writerow(header)
-
-def add_timestamp(cat, file):
-    """opens or creates a csv file with todays date in
-    filename. Adds timestamp to that csv including machine
-    number, part number, id number, user, time, date"""
-    now = time.strftime("%H:%M:%S")
-    data = (cat, pi, mach_num, part_num, user, now, today)
-    with open(file, "a", newline="") as fa:
-        writer = csv.writer(fa, delimiter=",")
-        writer.writerow(data)
+def invalid_sequence()
+    lcd.clear()
+    lcd.message(invalid_msg)
+    time.sleep(30)
+    lcd.clear()
 
 
-def update_csv():
-    """Updates the CSV file path with Today's date
-    and creates a new csv from that file name"""
-    today = date.today()
-    file_path = create_file_path(day=today)
-    create_csv(file=file_path)
-    return today, file_path
+def invalid_params():
+    lcd.clear()
+    lcd.message(invalid_msg)
+    time.sleep(30)
+    lcd.clear()
 
 def gpio_on(pin):
     pin.on()
@@ -199,65 +320,154 @@ def run_sequence(seq_dict=seq, relays=relays):
             relay.off()
 
 
-# Evaluates the sequence
-seq_gate = evaluate_seq(seq, relays)
-part_gate = evaluate_part(part_num)
-mach_gate = evaluate_mach(mach_num)
-
-if seq_gate:
-    if part_gate:
-        if mach_gate:
-            lcd.clear()
-            today, file_path = update_csv()
-            user = 'tj user'
-            try:
-
-                while True:
-                    # Read info on RFID card, if present
-                    #id_num, user = reader.read()
-                   
-                    lcd.message(f"{part_num} {mach_num}",1)
-                    lcd.message(f"Cnt: {count}",2)
-                    if user != None:
-                       
-                        if button1.is_pressed:
-                            run_sequence()
-                            add_timestamp(shot, file_path)
-                            count += 1
-                            write_count(count)
-                            lcd.message("              ",2)
-                            button1.wait_for_release()
-                        
-                        if button2.is_pressed:
-                            count = 0
-                            write_count(count)
-                            lcd.clear()
-                            button2.wait_for_release()
-                    
+try:    
+    while True:
+        if mode == modes["standby"]:
+            emp_name = None
+            emp_num = None
+            idn = None
+            count_dict = read_pckl_counts(count_pkl)
+            total_count = count_dict['totalcount']
+            run_count = count_dict['runcount']
+            txt_file = read_main()
+            filename = "/home/pi/Desktop/" + str(txt_file)
+            seq = create_sequence(filename)
+            part_num, mach_num, countset = read_machvars_db()
+            param_test, prod_vars_dict = evaluate_params(part_num, mach_num, countset, prod_vars_dict)
+            sequence_test = evaluate_seq(seq, relays)
+            if param_test is True:
+                if sequence_test is True:
+                    save_vars(prod_vars_dict, prod_vars_pkl)
+                    lcd.clear()
+                    standby_info_top = f"Part:{part_num}"
+                    standby_info_btm = f"Cnt:{total_count} Mch:{mach_num}"
+                    lcd.message(standby_info_top, 1)
+                    lcd.message(standby_info_btm, 2)
+                    if startup is True:
+                        today, file_path = update_csv()
+                        mode = modes["standby"]
+                    while mode == modes["standby"]:
                         if date.today() != today:
                             today, file_path = update_csv()
-
-
-
-            except KeyboardInterrupt:
-                for relay in relays:
-                    relay.off()
-
-            except Exception as e:
-                print(e)
-                lcd.clear()
-                lcd.message("except",1)
-                time.sleep(10)
-
-
-        else:
+                        idn, emp_num = reader.read_no_block()
+                        if emp_num != None:
+                            emp_num = emp_num.strip()
+                            if emp_num == '':
+                                pass
+                            else:
+                                emp_name = ret_emp_name(emp_num)
+                                emp_count = 0
+                                add_timestamp(logon, file_path)
+                                mode = modes["run"]
+                        if gr_button.is_pressed:
+                            gr_button.wait_for_release()
+                            txt_file = read_main()
+                            filename = "/home/pi/Desktop/" + str(txt_file)
+                            seq = create_sequence(filename)
+                            part_num, mach_num, countset = read_machvars_db()
+                            param_test, prod_vars_dict = evaluate_params(part_num, mach_num, countset, prod_vars_dict)
+                            seq_test = evaluate_seq(seq, relays)
+                            if param_test is True:
+                                if seq_test is True:
+                                    save_vars(prod_vars_dict, prod_vars_pkl)
+                                    standby_info_top = f"Part:{part_num}"
+                                    standby_info_btm = f"Cnt:{total_count} Mch:{mach_num}"
+                                    lcd.clear()
+                                    lcd.message(standby_info_top, 1)
+                                    lcd.message(standby_info_btm, 2)
+                                else:
+                                    invalid_sequence()
+                            else:
+                                invalid_params()
+                        if red_button.is_pressed:
+                            button1.wait_for_release()
+                            time.sleep(0.2)
+                            mode = modes["menu"]
+                else:
+                    invalid_sequence()
+            else:
+                invalid_params()
+            startup = False
+        elif mode == modes["menu"]:
             lcd.clear()
-            lcd.message("Invalid Mach #",1)
-
-    else:
-        lcd.clear()
-        lcd.message("Invalid Part #")
-else:
+            time.sleep(.5)
+            lcd.message(menu_msg_top, 1)
+            lcd.message(menu_msg_btm,2)
+            while mode == modes["menu"]:
+                    if gr_button.is_pressed:
+                        gr_button.wait_for_release()
+                        count_dict["totalcount"] = 0
+                        count_dict["runcount"] = 0
+                        save_vars(count_dict, count_pkl)
+                        change_msg(count_reset_msg, sec=3)
+                        mode = modes["standby"]
+                    if red_button.is_pressed:
+                        red_button.wait_for_release()
+                        mode = modes["standby"]
+                        lcd.clear()
+        elif mode == modes["run"]:
+            run_msg_top1 = f"Part: {part_num} "
+            if emp_name != None:
+                run_msg_top2 = f"Emp: {emp_name}"
+            else:
+                run_msg_top2 = f"Emp: {emp_num}"
+            last_display = 0
+            last_disp_time = datetime.now()
+            now = datetime.now()
+            lcd.clear()
+            lcd.message(run_msg_top2, 1)
+            while mode == modes["run"]:
+                run_msg_btm = f"Cnt:{emp_count}, {total_count}"
+                last_display, last_disp_time = display_run_info(last_display, last_disp_time)
+                if countset == 0:
+                    pass
+                elif run_count == countset:
+                    sig_out.off()
+                    run_count = count_reset(run_count)
+                    button2.wait_for_press()
+                    button2.wait_for_release()
+                    lcd.clear()
+                    lcd.message(run_msg_top2, 1)
+                    sig_out.on()
+                if hand_button.is_pressed:
+                    run_sequence()
+                    emp_count += 1
+                    total_count, run_count = update_counts(total_count, run_count)
+                    save_vars(count_dict, count_pkl)
+                    add_timestamp(shot, file_path)
+                    now = datetime.now()
+                    time.sleep(0.1)
+                    hand_button.wait_for_release()
+                if datetime.now() >= now + timedelta(seconds=300):
+                    add_timestamp(timeout, file_path)
+                    sig_out.off()
+                    change_msg(timeoutm, sec=5)
+                    mode = modes["standby"]
+                if red_button.is_pressed:
+                    red_button.wait_for_release()
+                    logout_func(file_path)
+                    mode = modes["standby"]
+                if gr_button.is_pressed:
+                    gr_button.wait_for_release()
+                    sig_out.off()
+                    mode = modes["maint"]
+        elif mode == modes["maint"]:
+            add_timestamp(mas, file_path)
+            change_msg(maint_msg)
+            while mode == modes["maint"]:
+                if red_button.is_pressed:
+                    red_button.wait_for_release()
+                    add_timestamp(mae, file_path)
+                    logout_func(file_path)
+                    mode = modes["standby"]
+                if gr_button.is_pressed:
+                    gr_button.wait_for_release()
+                    add_timestamp(mae, file_path)
+                    change_msg(maint_end_msg, sec=1)
+                    mode = modes["run"]
+except KeyboardInterrupt:
     lcd.clear()
-    lcd.message("Invalid",1)
-    lcd.message("Sequence",2)
+except Exception as e:
+    lcd.clear()
+    lcd.message("ERROR")
+    print(e)
