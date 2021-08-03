@@ -5,7 +5,7 @@ import time
 import csv
 
 # TJ Machine number
-PI_NUM = '01'
+PI_NUM = '101'
     
 # Sets up active GPIO's as variables
 rfid_led = LED(12)
