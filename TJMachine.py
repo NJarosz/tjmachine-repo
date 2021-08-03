@@ -17,7 +17,7 @@ relay3 = OutputDevice(27, active_high=False)
 relay4 = OutputDevice(22, active_high=False)
 relays = (relay1, relay2, relay3, relay4)
 
-button1 = Button(13, pull_up=True)
+button1 = Button(26, pull_up=True)
 
 # Sets up RFID Reader
 reader = SimpleMFRC522()
