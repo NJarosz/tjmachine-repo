@@ -174,8 +174,8 @@ seq = create_sequence(filename)
 def evaluate_params(part, mach, countset, dicti):
     b = False
     try:
-        if part and len(part) != 0:
-            if mach and len(mach) != 0:
+        if part != None and len(part) != 0:
+            if mach != None and len(mach) != 0:
                 if type(countset) == int:
                     b = True
                     dicti['part'] = part
