@@ -11,6 +11,7 @@ import mysql.connector
 # PLC Number
 with open("/etc/hostname", "r") as hn:
     pi = hn.readline().rstrip("\n")
+
     
 count_num = int(''.join(i for i in pi if i.isdigit()))
 
@@ -26,6 +27,7 @@ gr_button = Button(16, pull_up=True, hold_time=1)
 red_button = Button(12, pull_up=True, hold_time=1)
 reader = SimpleMFRC522()
 lcd = I2C_LCD_driver.lcd()
+
 
 # Variables/paths
 csv_path = "/home/pi/Documents/CSV/"
@@ -57,6 +59,7 @@ count_reset_msg = "Counter= 0"
 logoutm = "Logged Out"
 timeoutm = "Timed Out"
 db_name = "device_vars"
+
 
 try:
     db_host = os.environ.get("DB_HOST_1")
