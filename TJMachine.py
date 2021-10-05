@@ -377,11 +377,10 @@ try:
                             time.sleep(0.2)
                             mode = modes["menu"]
                         if rfid_bypass.is_pressed:
-                            if gr_button.is_pressed and red_button.is_pressed:
-                                emp_num = 999
-                                emp_count = 0
-                                add_timestamp(logon, file_path)
-                                mode = modes["run"]
+                            emp_num = 999
+                            emp_count = 0
+                            add_timestamp(logon, file_path)
+                            mode = modes["run"]
                         else:    
                             idn, emp_num = reader.read_no_block()
                             if emp_num != None:
