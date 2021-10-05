@@ -63,7 +63,7 @@ db_name = "tjtest"
 
 
 try:
-    db_host = 10.0.0.167
+    db_host = '10.0.0.167'
     db_user = os.environ.get("DB_USER_1")
     db_psw = os.environ.get("DB_PSW_1")
 except:
