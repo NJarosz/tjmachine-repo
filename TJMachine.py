@@ -59,11 +59,11 @@ menu_msg_btm = "Gr=Yes Red=No"
 count_reset_msg = "Counter= 0"
 logoutm = "Logged Out"
 timeoutm = "Timed Out"
-db_name = "device_vars"
+db_name = "tjtest"
 
 
 try:
-    db_host = os.environ.get("DB_HOST_1")
+    db_host = 10.0.0.167
     db_user = os.environ.get("DB_USER_1")
     db_psw = os.environ.get("DB_PSW_1")
 except:
