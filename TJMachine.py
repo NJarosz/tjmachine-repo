@@ -354,23 +354,23 @@ try:
                             today, file_path = update_csv()
                         if rfid_bypass.is_pressed:
                             if gr_button.is_pressed:
-                            gr_button.wait_for_release()
-                            txt_file = read_main()
-                            filename = "/home/pi/Desktop/" + str(txt_file)
-                            seq = create_sequence(filename)
-                            part_num, mach_num, countset = read_machvars_db()
-                            param_test, prod_vars_dict = evaluate_params(part_num, mach_num, countset, prod_vars_dict)
-                            seq_test = evaluate_seq(seq, relays)
-                            if param_test is True:
-                                if seq_test is True:
-                                    emp_num = 999
-                                    emp_count = 0
-                                    add_timestamp(logon, file_path)
-                                    mode = modes["run"]
+                                gr_button.wait_for_release()
+                                txt_file = read_main()
+                                filename = "/home/pi/Desktop/" + str(txt_file)
+                                seq = create_sequence(filename)
+                                part_num, mach_num, countset = read_machvars_db()
+                                param_test, prod_vars_dict = evaluate_params(part_num, mach_num, countset, prod_vars_dict)
+                                seq_test = evaluate_seq(seq, relays)
+                                if param_test is True:
+                                    if seq_test is True:
+                                        emp_num = 999
+                                        emp_count = 0
+                                        add_timestamp(logon, file_path)
+                                        mode = modes["run"]
+                                    else:
+                                        invalid_sequence()
                                 else:
-                                    invalid_sequence()
-                            else:
-                                invalid_params()
+                                    invalid_params()
                             if red_button.is_pressed:
                             red_button.wait_for_release()
                             time.sleep(0.2)
