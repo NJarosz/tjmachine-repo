@@ -372,9 +372,9 @@ try:
                                 else:
                                     invalid_params()
                             if red_button.is_pressed:
-                            red_button.wait_for_release()
-                            time.sleep(0.2)
-                            mode = modes["menu"]
+                                red_button.wait_for_release()
+                                time.sleep(0.2)
+                                mode = modes["menu"]
                         else:    
                             idn, emp_num = reader.read_no_block()
                             if emp_num != None:
