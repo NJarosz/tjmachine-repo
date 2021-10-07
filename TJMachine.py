@@ -25,6 +25,7 @@ relays = (relay1, relay2, relay3, relay4)
 hand_button = Button(26, pull_up=True, hold_time=3)
 gr_button = Button(16, pull_up=True, hold_time=1)
 red_button = Button(12, pull_up=True, hold_time=1)
+rfid_bypass = Button (23, pull_up=True)
 reader = SimpleMFRC522()
 lcd = I2C_LCD_driver.lcd()
 
