@@ -352,7 +352,8 @@ try:
                     while mode == modes["standby"]:
                         if date.today() != today:
                             today, file_path = update_csv()
-                        if gr_button.is_pressed:
+                        if rfid_bypass.is_pressed:
+                            if gr_button.is_pressed:
                             gr_button.wait_for_release()
                             txt_file = read_main()
                             filename = "/home/pi/Desktop/" + str(txt_file)
@@ -362,25 +363,18 @@ try:
                             seq_test = evaluate_seq(seq, relays)
                             if param_test is True:
                                 if seq_test is True:
-                                    save_vars(prod_vars_dict, prod_vars_pkl)
-                                    standby_info_top = f"Part:{part_num}"
-                                    standby_info_btm = f"Cnt:{total_count} Mch:{mach_num}"
-                                    lcd.clear()
-                                    lcd.message(standby_info_top, 1)
-                                    lcd.message(standby_info_btm, 2)
+                                    emp_num = 999
+                                    emp_count = 0
+                                    add_timestamp(logon, file_path)
+                                    mode = modes["run"]
                                 else:
                                     invalid_sequence()
                             else:
                                 invalid_params()
-                        if red_button.is_pressed:
+                            if red_button.is_pressed:
                             red_button.wait_for_release()
                             time.sleep(0.2)
                             mode = modes["menu"]
-                        if rfid_bypass.is_pressed:
-                            emp_num = 999
-                            emp_count = 0
-                            add_timestamp(logon, file_path)
-                            mode = modes["run"]
                         else:    
                             idn, emp_num = reader.read_no_block()
                             if emp_num != None:
@@ -391,7 +385,31 @@ try:
                                     emp_name = ret_emp_name(emp_num)
                                     emp_count = 0
                                     add_timestamp(logon, file_path)
-                                    mode = modes["run"]
+                                    mode = modes["run"]    
+                            if gr_button.is_pressed:
+                                gr_button.wait_for_release()
+                                txt_file = read_main()
+                                filename = "/home/pi/Desktop/" + str(txt_file)
+                                seq = create_sequence(filename)
+                                part_num, mach_num, countset = read_machvars_db()
+                                param_test, prod_vars_dict = evaluate_params(part_num, mach_num, countset, prod_vars_dict)
+                                seq_test = evaluate_seq(seq, relays)
+                                if param_test is True:
+                                    if seq_test is True:
+                                        save_vars(prod_vars_dict, prod_vars_pkl)
+                                        standby_info_top = f"Part:{part_num}"
+                                        standby_info_btm = f"Cnt:{total_count} Mch:{mach_num}"
+                                        lcd.clear()
+                                        lcd.message(standby_info_top, 1)
+                                        lcd.message(standby_info_btm, 2)
+                                    else:
+                                        invalid_sequence()
+                                else:
+                                    invalid_params()
+                            if red_button.is_pressed:
+                                red_button.wait_for_release()
+                                time.sleep(0.2)
+                                mode = modes["menu"]       
                 else:
                     invalid_sequence()
             else:
