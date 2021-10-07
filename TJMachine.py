@@ -25,6 +25,7 @@ relays = (relay1, relay2, relay3, relay4)
 hand_button = Button(26, pull_up=True, hold_time=3)
 gr_button = Button(16, pull_up=True, hold_time=1)
 red_button = Button(12, pull_up=True, hold_time=1)
+rfid_bypass = Button (23, pull_up=True)
 reader = SimpleMFRC522()
 lcd = I2C_LCD_driver.lcd()
 
@@ -58,11 +59,11 @@ menu_msg_btm = "Gr=Yes Red=No"
 count_reset_msg = "Counter= 0"
 logoutm = "Logged Out"
 timeoutm = "Timed Out"
-db_name = "device_vars"
+db_name = "tjtest"
 
 
 try:
-    db_host = os.environ.get("DB_HOST_1")
+    db_host = '10.0.0.167'
     db_user = os.environ.get("DB_USER_1")
     db_psw = os.environ.get("DB_PSW_1")
 except:
@@ -351,16 +352,6 @@ try:
                     while mode == modes["standby"]:
                         if date.today() != today:
                             today, file_path = update_csv()
-                        idn, emp_num = reader.read_no_block()
-                        if emp_num != None:
-                            emp_num = emp_num.strip()
-                            if emp_num == '':
-                                pass
-                            else:
-                                emp_name = ret_emp_name(emp_num)
-                                emp_count = 0
-                                add_timestamp(logon, file_path)
-                                mode = modes["run"]
                         if gr_button.is_pressed:
                             gr_button.wait_for_release()
                             txt_file = read_main()
@@ -385,6 +376,22 @@ try:
                             red_button.wait_for_release()
                             time.sleep(0.2)
                             mode = modes["menu"]
+                        if rfid_bypass.is_pressed:
+                            emp_num = 999
+                            emp_count = 0
+                            add_timestamp(logon, file_path)
+                            mode = modes["run"]
+                        else:    
+                            idn, emp_num = reader.read_no_block()
+                            if emp_num != None:
+                                emp_num = emp_num.strip()
+                                if emp_num == '':
+                                    pass
+                                else:
+                                    emp_name = ret_emp_name(emp_num)
+                                    emp_count = 0
+                                    add_timestamp(logon, file_path)
+                                    mode = modes["run"]
                 else:
                     invalid_sequence()
             else:
