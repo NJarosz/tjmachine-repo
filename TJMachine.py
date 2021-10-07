@@ -19,7 +19,7 @@ count_num = int(''.join(i for i in pi if i.isdigit()))
 
 relay1 = OutputDevice(4, active_high=False)
 relay2 = OutputDevice(17, active_high=False)
-relay3 = OutputDevice(13, active_high=False)
+relay3 = OutputDevice(27, active_high=False)
 relay4 = OutputDevice(22, active_high=False)
 relays = (relay1, relay2, relay3, relay4)
 hand_button = Button(26, pull_up=True, hold_time=3)
