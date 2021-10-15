@@ -1,4 +1,7 @@
 # TJMachine
+
+!!!NOT CONNECTED TO DATABASE- READ/WRITES INFO OFF OF LOCAL FILE!!!
+
 RPI project for TJ
 
 Reads instructions from a txt file (Instructions) to create sequence of turning relays on/off for appropriate amounts of time.  
