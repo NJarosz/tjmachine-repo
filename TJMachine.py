@@ -107,9 +107,14 @@ def read_machvars_db(count_num=count_num):
         countset = int(countset[0])
         c.close()
     except:
-        part = str(prod_vars_dict['part'])
-        mach = str(prod_vars_dict['mach'])
-        countset = int(prod_vars_dict['countset'])
+        try:
+            part = str(prod_vars_dict['part'])
+            mach = str(prod_vars_dict['mach'])
+            countset = int(prod_vars_dict['countset'])
+        except:
+            part = 9999
+            mach = 99
+            countset = 0
 
     return part, mach, countset
     
