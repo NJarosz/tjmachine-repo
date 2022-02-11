@@ -333,7 +333,7 @@ try:
     while True:
         loop1 = 0
         if mode == modes["standby"]:
-            loop+=1
+            loop1+=1
             emp_name = None
             emp_num = None
             idn = None
