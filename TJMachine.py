@@ -330,8 +330,8 @@ def run_sequence(seq_dict=seq, relays=relays):
 
 
 try:    
+    loop1 = 0
     while True:
-        loop1 = 0
         if mode == modes["standby"]:
             loop1+=1
             emp_name = None
