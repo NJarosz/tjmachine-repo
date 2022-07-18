@@ -499,3 +499,14 @@ except Exception as e:
     lcd.clear()
     lcd.message("ERROR")
     print(e)
+    prod_vars_dict = {"part": 0,
+                  "mach": 0,
+                  "countset": 0}
+
+    counts_dict = {"totalcount": 0,
+               "runcount": 0}
+
+    save_vars(prod_vars_dict, prod_vars_pkl)
+    save_vars(counts_dict, count_pkl)
+    time.sleep(5)
+    os.system("reboot")
