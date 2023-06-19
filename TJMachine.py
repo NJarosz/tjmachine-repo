@@ -423,7 +423,7 @@ try:
                     lcd.clear()
                     lcd.message(run_msg_top2, 1)
                 if datetime.now() >= now + timedelta(seconds=1):
-                    if (foot_button.is_pressed and eyebeam.is_pressed):
+                    if foot_button.is_pressed:
                         run_sequence()
                         emp_count += 1
                         total_count, run_count = update_counts(total_count, run_count)
