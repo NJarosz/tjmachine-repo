@@ -22,8 +22,9 @@ relay2 = OutputDevice(17, active_high=False)
 relay3 = OutputDevice(27, active_high=False)
 relay4 = OutputDevice(22, active_high=False)
 relays = (relay1, relay2, relay3, relay4)
-hand_button = Button(26, pull_up=True, hold_time=3)
-gr_button = Button(16, pull_up=True, hold_time=1)
+hand_button = Button(26, pull_up=True, bounce_time=1.5, hold_repeat=False)
+hand_button2 = Button(13, pull_up=True)
+gr_button = Button(16, pull_up=True, hold_time=2)
 red_button = Button(12, pull_up=True, hold_time=1)
 rfid_bypass = Button (23, pull_up=True)
 reader = SimpleMFRC522()
@@ -39,19 +40,14 @@ file_path = ""
 logon = "LOG_ON"
 logout = "LOG_OFF"
 timeout = "TIME_OUT"
-mas = "MAS"
-mae = "MAE"
 shot = "SHOT"
 modes = {"setup": 0,
          "standby": 1,
          "menu": 2,
-         "run": 3,
-         "maint": 4
+         "run": 3
          }
 mode = modes["standby"]
 startup = True
-maint_msg = "Maintenance"
-maint_end_msg = "Maintenance End"
 invalid_msg = "Invalid Data"
 invalid_seq = "Invalid Seq"
 menu_msg_top = "Reset Counter?"
@@ -459,15 +455,15 @@ try:
                     button2.wait_for_release()
                     lcd.clear()
                     lcd.message(run_msg_top2, 1)
-                if hand_button.is_pressed:
-                    run_sequence()
-                    emp_count += 1
-                    total_count, run_count = update_counts(total_count, run_count)
-                    save_vars(count_dict, count_pkl)
-                    add_timestamp(shot, file_path)
-                    now = datetime.now()
-                    time.sleep(0.1)
-                    hand_button.wait_for_release()
+                if datetime.now() >= now + timedelta(seconds=1):
+                    if (hand_button.is_pressed and hand_button2.is_pressed):
+                        run_sequence()
+                        emp_count += 1
+                        total_count, run_count = update_counts(total_count, run_count)
+                        save_vars(count_dict, count_pkl)
+                        add_timestamp(shot, file_path)
+                        hand_button.wait_for_release()
+                        now = datetime.now()
                 if datetime.now() >= now + timedelta(seconds=300):
                     add_timestamp(timeout, file_path)
                     change_msg(timeoutm, sec=5)
@@ -476,23 +472,8 @@ try:
                     red_button.wait_for_release()
                     logout_func(file_path)
                     mode = modes["standby"]
-                if gr_button.is_pressed:
-                    gr_button.wait_for_release()
-                    mode = modes["maint"]
-        elif mode == modes["maint"]:
-            add_timestamp(mas, file_path)
-            change_msg(maint_msg)
-            while mode == modes["maint"]:
-                if red_button.is_pressed:
-                    red_button.wait_for_release()
-                    add_timestamp(mae, file_path)
-                    logout_func(file_path)
-                    mode = modes["standby"]
-                if gr_button.is_pressed:
-                    gr_button.wait_for_release()
-                    add_timestamp(mae, file_path)
-                    change_msg(maint_end_msg, sec=1)
-                    mode = modes["run"]
+
+
 except KeyboardInterrupt:
     lcd.clear()
 except Exception as e:
