@@ -114,7 +114,7 @@ def ret_emp_names(filename):
             else:
                 key, value = line.replace(' ', '').strip().split(",")
                 key = key.lower()
-                emps[int(key)] = value
+                emps[key] = value
 
     return emps
 
@@ -364,7 +364,7 @@ try:
                         else:
                             if gr_button.is_pressed:
                                 gr_button.wait_for_release()
-                                idn, emp_num = reader.read()
+                                idn, emp_num = reader.read_no_block()
                                 if emp_num != None:
                                     emp_num = emp_num.strip()
                                     if emp_num == '':
