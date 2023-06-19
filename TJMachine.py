@@ -100,7 +100,7 @@ def read_production_info(filename):
 
     return part, machine, count_goal
 
-part_num, mach_num, count_goal = read_production_info()
+part_num, mach_num, count_goal = read_production_info(production_info)
     
 def ret_emp_names(filename):
     # Attempts to retrieve employee name from DB based on the number on their ID card
