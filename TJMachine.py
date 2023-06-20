@@ -38,7 +38,7 @@ production_info = "/home/pi/Documents/production_info.txt"
 employee_info = "/home/pi/Documents/employee_info.txt"
 main = "/home/pi/Desktop/main"
 file_path = ""
-mode = "standby"
+mode = "refresh"
 startup = True
 
 logon = "LOG_ON"
@@ -331,8 +331,6 @@ try:
             lcd.message(standby_info_top, 1)
             lcd.message(standby_info_btm, 2)
 
-            if startup is True:
-
 
             while mode == "standby":
                 if date.today() != today:
@@ -367,7 +365,6 @@ try:
                                     add_timestamp(logon, file_path)
                                     mode = "run"
 
-            startup = False
 
         elif mode == "refresh":
             lcd.clear()
@@ -399,6 +396,7 @@ try:
                 lcd.display(invalid_program_btm,2)
 
             if startup is True:
+                startup = False
                 #Update the CSV
                 lcd.clear()
                 lcd.message(csv_msg, 1)
