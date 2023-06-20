@@ -352,18 +352,16 @@ try:
                 else:
                     if gr_button.is_pressed:
                         gr_button.wait_for_release()
-                        now = datetime.now()
-                        if datetime.now() <= now + timedelta(seconds=30):
-                            idn, emp_num = reader.read_no_block()
-                            if emp_num != None:
-                                emp_num = emp_num.strip()
-                                if emp_num == '':
-                                    pass
-                                else:
-                                    emp_name = employees[emp_num]
-                                    emp_count = 0
-                                    add_timestamp(logon, file_path)
-                                    mode = "run"
+                        idn, emp_num = reader.read_no_block()
+                        if emp_num != None:
+                            emp_num = emp_num.strip()
+                            if emp_num == '':
+                                pass
+                            else:
+                                emp_name = employees[emp_num]
+                                emp_count = 0
+                                add_timestamp(logon, file_path)
+                                mode = "run"
 
 
         elif mode == "refresh":
@@ -401,7 +399,7 @@ try:
                 lcd.clear()
                 lcd.message(csv_msg, 1)
                 today, file_path = update_csv()
-                time.sleep(.5)
+                time.sleep(1)
                 #Load the counts
                 lcd.clear()
                 lcd.message(load_count_msg)
