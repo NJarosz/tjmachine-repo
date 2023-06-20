@@ -371,6 +371,7 @@ try:
             #Load the Program
             lcd.message(load_program_msg, 1)
             seq = create_sequence()
+            print(seq)
             sequence_test = evaluate_seq(seq, relays)
             time.sleep(1)
             if sequence_test is True:
@@ -438,6 +439,7 @@ try:
             now = datetime.now()
             lcd.clear()
             lcd.message(run_msg_top2, 1)
+            print(seq)
             while mode == "run":
                 run_msg_btm = f"Cnt:{emp_count}, {total_count}"
                 last_display, last_disp_time = display_run_info(last_display, last_disp_time)
