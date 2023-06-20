@@ -337,6 +337,7 @@ try:
                     today, file_path = update_csv()
 
                 if red_button.is_held:
+                    lcd.clear()
                     red_button.wait_for_release()
                     time.sleep(0.2)
                     mode = "refresh"
@@ -365,8 +366,6 @@ try:
 
 
         elif mode == "refresh":
-            lcd.clear()
-            time.sleep(.1)
 
             #Load the Program
             lcd.message(load_program_msg, 1)
