@@ -25,7 +25,7 @@ relays = (relay1, relay2, relay3, relay4)
 foot_button = Button(26, pull_up=True)
 eyebeam = Button(13, pull_up=True)
 gr_button = Button(16, pull_up=True, hold_time=2)
-red_button = Button(12, pull_up=True, hold_time=1)
+red_button = Button(12, pull_up=True, hold_time=3)
 rfid_bypass = Button(23, pull_up=True)
 reader = SimpleMFRC522()
 lcd = I2C_LCD_driver.lcd()
@@ -38,20 +38,23 @@ production_info = "/home/pi/Documents/production_info.txt"
 employee_info = "/home/pi/Documents/employee_info.txt"
 main = "/home/pi/Desktop/main"
 file_path = ""
+mode = "standby"
+startup = True
+
 logon = "LOG_ON"
 logout = "LOG_OFF"
 timeout = "TIME_OUT"
 shot = "SHOT"
-modes = {"setup": 0,
-         "standby": 1,
-         "menu": 2,
-         "run": 3
-         }
-mode = modes["standby"]
-startup = True
-employees = {}
-invalid_msg = "Invalid Data"
-invalid_seq = "Invalid Seq"
+
+#LCD Messages
+csv_msg = "Updating CSV"
+load_program_msg = "Loading Program"
+load_part_msg = "Loading Part Info"
+load_emp_msg = "Loading Emp Info"
+load_count_msg = "Loading Count"
+invalid_data_msg = "Invalid Data"
+invalid_program_top = "Invalid Seq"
+invalid_program_btm = "Grn=Try Again"
 menu_msg_top = "Reset Counter?"
 menu_msg_btm = "Gr=Yes Red=No"
 count_reset_msg = "Counter= 0"
@@ -74,8 +77,8 @@ def save_vars(dict, pkl_file):
     with open(pkl_file, "wb") as pckl:
         pickle.dump(dict, pckl)
 
-def read_production_info(filename):
-    """Reads the part, machine and count goal info from the production info text file
+def read_production_info(filename=production_info):
+    """Reads the part, machine, and count goal info from the production info text file
     saved in Documents.  Returns each value, and returns dummy values if not valid"""
     with open(filename, 'r') as text:
         for line in text:
@@ -85,6 +88,7 @@ def read_production_info(filename):
                 pass
             else:
                 try:
+                    valid = True
                     key, value = line.replace(' ','').strip().split(",")
                     key = key.lower()
                     if key == "part":
@@ -97,12 +101,12 @@ def read_production_info(filename):
                     part = "999"
                     machine = "UNK"
                     count_goal = 0
+                    valid = False
 
-    return part, machine, count_goal
+    return part, machine, count_goal, valid
 
-part_num, mach_num, count_goal = read_production_info(production_info)
     
-def ret_emp_names(filename):
+def ret_emp_names(filename=employee_info):
     # Attempts to retrieve employee name from DB based on the number on their ID card
     emps = {}
     with open(filename, 'r') as text:
@@ -118,7 +122,8 @@ def ret_emp_names(filename):
 
     return emps
 
-employees = ret_emp_names(employee_info)
+
+employees = ret_emp_names()
 
 def read_main(path=main):
     """reads main to determine which
@@ -127,10 +132,12 @@ def read_main(path=main):
         txt = m.readline().rstrip("\n")
     return txt
  
-def create_sequence(filename):
+def create_sequence():
     """Creates the order of relay operations by reading
     the text file.  Returns the sequence as a dict 
     and the part number being ran."""
+    txt_file = read_main()
+    filename = "/home/pi/Desktop/" + str(txt_file)
     sequence = {}
     ind = 1
     with open(filename, 'r') as text:
@@ -159,9 +166,7 @@ def create_sequence(filename):
 
 
 # Instantiates the sequence
-txt_file = read_main()
-filename = "/home/pi/Desktop/" + str(txt_file)
-seq = create_sequence(filename)
+seq = create_sequence()
 
 
 def evaluate_params(part, mach, countset, dicti):
@@ -278,14 +283,14 @@ def evaluate_seq(seq_dict, relays):
 
 def invalid_sequence():
     lcd.clear()
-    lcd.message(invalid_seq)
+    lcd.message(invalid_program_top)
     time.sleep(60)
     lcd.clear()
 
 
 def invalid_params():
     lcd.clear()
-    lcd.message(invalid_msg)
+    lcd.message(invalid_data_msg)
     time.sleep(60)
     lcd.clear()
 
@@ -315,92 +320,118 @@ def run_sequence(seq_dict=seq, relays=relays):
 
 try:    
     while True:
-        if mode == modes["standby"]:
+        if mode == "standby":
             emp_name = None
             emp_num = None
             idn = None
-            count_dict = read_pckl_counts(count_pkl)
-            total_count = count_dict['totalcount']
-            run_count = count_dict['runcount']
-            txt_file = read_main()
-            filename = "/home/pi/Desktop/" + str(txt_file)
-            seq = create_sequence(filename)
-            param_test = True #, prod_vars_dict = evaluate_params(part_num, mach_num, countset, prod_vars_dict)
-            sequence_test = evaluate_seq(seq, relays)
-            if param_test is True:
-                if sequence_test is True:
-                    lcd.clear()
-                    standby_info_top = f"Part:{part_num}"
-                    standby_info_btm = f"Cnt:{total_count} Mch:{mach_num}"
-                    lcd.message(standby_info_top, 1)
-                    lcd.message(standby_info_btm, 2)
-                    if startup is True:
-                        today, file_path = update_csv()
-                    while mode == modes["standby"]:
-                        if date.today() != today:
-                            today, file_path = update_csv()
-                        if rfid_bypass.is_pressed:
-                            if gr_button.is_pressed:
-                                gr_button.wait_for_release()
-                                txt_file = read_main()
-                                filename = "/home/pi/Desktop/" + str(txt_file)
-                                seq = create_sequence(filename)
-                                param_test = True #, prod_vars_dict = evaluate_params(part_num, mach_num, countset, prod_vars_dict)
-                                seq_test = evaluate_seq(seq, relays)
-                                if param_test is True:
-                                    if seq_test is True:
-                                        emp_num = 999
-                                        emp_count = 0
-                                        add_timestamp(logon, file_path)
-                                        mode = modes["run"]
-                                    else:
-                                        invalid_sequence()
-                                else:
-                                    invalid_params()
-                            if red_button.is_pressed:
-                                red_button.wait_for_release()
-                                time.sleep(0.2)
-                                mode = modes["menu"]
-                        else:
-                            if gr_button.is_pressed:
-                                gr_button.wait_for_release()
-                                idn, emp_num = reader.read_no_block()
-                                if emp_num != None:
-                                    emp_num = emp_num.strip()
-                                    if emp_num == '':
-                                        pass
-                                    else:
-                                        emp_name = employees[emp_num]
-                                        emp_count = 0
-                                        add_timestamp(logon, file_path)
-                                        mode = modes["run"]
-                            if red_button.is_pressed:
-                                red_button.wait_for_release()
-                                time.sleep(0.2)
-                                mode = modes["menu"]       
-                else:
-                    invalid_sequence()
-            else:
-                invalid_params()
-            startup = False
-        elif mode == modes["menu"]:
+
             lcd.clear()
-            time.sleep(.5)
-            lcd.message(menu_msg_top, 1)
-            lcd.message(menu_msg_btm,2)
-            while mode == modes["menu"]:
+            standby_info_top = f"Part:{part_num}"
+            standby_info_btm = f"Cnt:{total_count} Mch:{mach_num}"
+            lcd.message(standby_info_top, 1)
+            lcd.message(standby_info_btm, 2)
+
+            if startup is True:
+
+
+            while mode == "standby":
+                if date.today() != today:
+                    today, file_path = update_csv()
+
+                if red_button.is_held:
+                    red_button.wait_for_release()
+                    time.sleep(0.2)
+                    mode = "refresh"
+
+                if rfid_bypass.is_pressed:
+                    if gr_button.is_pressed:
+                        gr_button.wait_for_release()
+                        emp_num = 999
+                        emp_count = 0
+                        add_timestamp(logon, file_path)
+                        mode = "run"
+
+                else:
+                    if gr_button.is_pressed:
+                        gr_button.wait_for_release()
+                        now = datetime.now()
+                        if datetime.now() <= now + timedelta(seconds=30):
+                            idn, emp_num = reader.read_no_block()
+                            if emp_num != None:
+                                emp_num = emp_num.strip()
+                                if emp_num == '':
+                                    pass
+                                else:
+                                    emp_name = employees[emp_num]
+                                    emp_count = 0
+                                    add_timestamp(logon, file_path)
+                                    mode = "run"
+
+            startup = False
+
+        elif mode == "refresh":
+            lcd.clear()
+            time.sleep(.1)
+
+            #Load the Program
+            lcd.message(load_program_msg, 1)
+            seq = create_sequence()
+            sequence_test = evaluate_seq(seq, relays)
+            time.sleep(1)
+            if sequence_test is True:
+                #Load part info
+                lcd.clear()
+                lcd.message(load_part_msg, 1)
+                part_num, mach_num, count_goal, valid_info = read_production_info()
+                time.sleep(1)
+                if valid_info is True:
+                    #Load employee info
+                    lcd.clear()
+                    lcd.message(load_emp_msg, 1)
+                    employees = ret_emp_names()
+                    time.sleep(1)
+                else:
+                    lcd.clear()
+                    lcd.display(invalid_data_msg, 1)
+            else:
+                lcd.clear()
+                lcd.display(invalid_program_top,1)
+                lcd.display(invalid_program_btm,2)
+
+            if startup is True:
+                #Update the CSV
+                lcd.clear()
+                lcd.message(csv_msg, 1)
+                today, file_path = update_csv()
+                time.sleep(.5)
+                #Load the counts
+                lcd.clear()
+                lcd.message(load_count_msg)
+                count_dict = read_pckl_counts(count_pkl)
+                total_count = count_dict['totalcount']
+                run_count = count_dict['runcount']
+                time.sleep(1)
+                mode = "standby"
+            else:
+                #Give option to Reset Counts
+                lcd.clear()
+                time.sleep(.5)
+                lcd.message(menu_msg_top, 1)
+                lcd.message(menu_msg_btm, 2)
+                while mode == "refresh":
                     if gr_button.is_pressed:
                         gr_button.wait_for_release()
                         count_dict["totalcount"] = 0
                         count_dict["runcount"] = 0
                         save_vars(count_dict, count_pkl)
                         change_msg(count_reset_msg, sec=3)
-                        mode = modes["standby"]
+                        mode = "standby"
                     if red_button.is_pressed:
                         red_button.wait_for_release()
-                        mode = modes["standby"]
+                        mode = "standby"
                         lcd.clear()
-        elif mode == modes["run"]:
+
+        elif mode == "run":
             run_msg_top1 = f"Part: {part_num} "
             if emp_name != None:
                 run_msg_top2 = f"Emp: {emp_name}"
@@ -411,15 +442,15 @@ try:
             now = datetime.now()
             lcd.clear()
             lcd.message(run_msg_top2, 1)
-            while mode == modes["run"]:
+            while mode == "run":
                 run_msg_btm = f"Cnt:{emp_count}, {total_count}"
                 last_display, last_disp_time = display_run_info(last_display, last_disp_time)
                 if count_goal == 0:
                     pass
                 elif run_count == count_goal:
                     run_count = count_reset(run_count)
-                    button2.wait_for_press()
-                    button2.wait_for_release()
+                    gr_button.wait_for_press()
+                    gr_button.wait_for_release()
                     lcd.clear()
                     lcd.message(run_msg_top2, 1)
                 if datetime.now() >= now + timedelta(seconds=1):
@@ -434,11 +465,11 @@ try:
                 if datetime.now() >= now + timedelta(seconds=300):
                     add_timestamp(timeout, file_path)
                     change_msg(timeoutm, sec=5)
-                    mode = modes["standby"]
+                    mode = "standby"
                 if red_button.is_pressed:
                     red_button.wait_for_release()
                     logout_func(file_path)
-                    mode = modes["standby"]
+                    mode = "standby"
 
 
 except KeyboardInterrupt:
