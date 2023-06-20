@@ -452,7 +452,7 @@ try:
                     lcd.message(run_msg_top2, 1)
                 if datetime.now() >= now + timedelta(seconds=1):
                     if foot_button.is_pressed:
-                        run_sequence()
+                        run_sequence(seq_dict=seq)
                         emp_count += 1
                         total_count, run_count = update_counts(total_count, run_count)
                         save_vars(count_dict, count_pkl)
