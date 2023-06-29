@@ -22,8 +22,7 @@ relay2 = OutputDevice(17, active_high=False)
 relay3 = OutputDevice(27, active_high=False)
 relay4 = OutputDevice(22, active_high=False)
 relays = (relay1, relay2, relay3, relay4)
-foot_button = Button(26, pull_up=True)
-eyebeam = Button(13, pull_up=True)
+hand_button = Button(26, pull_up=True)
 gr_button = Button(16, pull_up=True, hold_time=2)
 red_button = Button(12, pull_up=True, hold_time=3)
 rfid_bypass = Button(23, pull_up=True)
@@ -451,13 +450,13 @@ try:
                     lcd.clear()
                     lcd.message(run_msg_top2, 1)
                 if datetime.now() >= now + timedelta(seconds=1):
-                    if foot_button.is_pressed & eyebeam.is_pressed:
+                    if hand_button.is_pressed:
                         run_sequence(seq_dict=seq)
                         emp_count += 1
                         total_count, run_count = update_counts(total_count, run_count)
                         save_vars(count_dict, count_pkl)
                         add_timestamp(shot, file_path)
-                        foot_button.wait_for_release()
+                        hand_button.wait_for_release()
                         now = datetime.now()
                 if datetime.now() >= now + timedelta(seconds=300):
                     add_timestamp(timeout, file_path)
