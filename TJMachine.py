@@ -76,7 +76,7 @@ def save_vars(dict, pkl_file):
     with open(pkl_file, "wb") as pckl:
         pickle.dump(dict, pckl)
 
-def read_production_info(filename=production_info):
+def read_production_info(filename):
     """Reads the part, machine, and count goal info from the production info text file
     saved in Documents.  Returns each value, and returns dummy values if not valid"""
     with open(filename, 'r') as text:
@@ -97,7 +97,7 @@ def read_production_info(filename=production_info):
                     elif key == "count_goal":
                         count_goal = int(value)
                 except:
-                    part = "999"
+                    part = "9999"
                     machine = "UNK"
                     count_goal = 0
                     valid = False
@@ -105,7 +105,7 @@ def read_production_info(filename=production_info):
     return part, machine, count_goal, valid
 
     
-def ret_emp_names(filename=employee_info):
+def ret_emp_names(filename):
     # Attempts to retrieve employee name from DB based on the number on their ID card
     emps = {}
     with open(filename, 'r') as text:
@@ -122,7 +122,7 @@ def ret_emp_names(filename=employee_info):
     return emps
 
 
-employees = ret_emp_names()
+employees = ret_emp_names(employee_info)
 
 def read_main(path=main):
     """reads main to determine which
@@ -376,13 +376,13 @@ try:
                 #Load part info
                 lcd.clear()
                 lcd.message(load_part_msg, 1)
-                part_num, mach_num, count_goal, valid_info = read_production_info()
+                part_num, mach_num, count_goal, valid_info = read_production_info(production_info)
                 time.sleep(1)
                 if valid_info is True:
                     #Load employee info
                     lcd.clear()
                     lcd.message(load_emp_msg, 1)
-                    employees = ret_emp_names()
+                    employees = ret_emp_names(employee_info)
                     time.sleep(1)
                 else:
                     lcd.clear()
